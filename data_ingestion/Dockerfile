@@ -11,6 +11,7 @@ WORKDIR /app
 COPY requirements.txt /app/
 
 # Install the required packages
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN pip install logging
 
