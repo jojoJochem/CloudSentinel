@@ -1,5 +1,5 @@
 # Use the official Python image from the Docker Hub
-FROM python:3.12
+FROM python:3.12-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED 1
@@ -11,8 +11,8 @@ WORKDIR /app
 COPY requirements.txt /app/
 
 # Install the required packages
-RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+RUN pip install logging
 
 # Copy the rest of the application code into the container
 COPY . /app/

@@ -26,8 +26,8 @@ jobs:
       run: |
         docker build -t data_ingestion:latest -f data_ingestion/Dockerfile data_ingestion/
         docker build -t data_processing:latest -f data_processing/Dockerfile data_processing/
-        docker build -t cgnn_anomaly_detection:latest -f cgnn_anomaly_detection/Dockerfile cgnn_anomaly_detection/
-        docker build -t crca_anomaly_detection:latest -f crca_anomaly_detection/Dockerfile crca_anomaly_detection/
+        docker build -t cgnn_anomaly_detection:latest -f anomaly_detection/cgnn/Dockerfile cgnn_anomaly_detection/
+        docker build -t crca_anomaly_detection:latest -f anomaly_detection/crca/Dockerfile crca_anomaly_detection/
         docker build -t learning_adaptation:latest -f learning_adaptation/Dockerfile learning_adaptation/
         docker tag data_ingestion:latest myrepo/data_ingestion:latest
         docker tag data_processing:latest myrepo/data_processing:latest
