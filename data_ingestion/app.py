@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from celery import Celery
-import logging
+# import logging
 import requests
 import time
 import json
@@ -20,8 +20,8 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# logger = logging.getLogger(__name__)
 
 # celery -A app_1.celery worker --loglevel=info
 
