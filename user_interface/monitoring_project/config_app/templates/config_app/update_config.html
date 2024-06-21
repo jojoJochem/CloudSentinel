@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Update Configuration{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Update Configuration</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="mt-3">
+                        {% csrf_token %}
+
+                        {% if form %}
+                            <div class="form-group">
+                                {{ form.as_p }}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning" role="alert">
+                                No configuration data available. Please set up your configuration.
+                            </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-center">
+                            <button type="submit" class="btn btn-success mr-3 btnnn">Update Config</button>
+                            <a href="{% url redirect_url %}" class="btn btn-danger ml-3 btnnn">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

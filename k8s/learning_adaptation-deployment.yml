@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: learning-adaptation-deployment
+  namespace: CloudSentinel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: learning-adaptation
+  template:
+    metadata:
+      labels:
+        app: learning-adaptation
+    spec:
+      containers:
+      - name: learning-adaptation
+        image: myrepo/learning_adaptation:latest
+        ports:
+        - containerPort: 5005
+        env:
+        - name: CELERY_BROKER_URL
+          value: "redis://redis:6379/2"
+        - name: CELERY_RESULT_BACKEND
+          value: "redis://redis:6379/2"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: learning-adaptation-service
+  namespace: CloudSentinel
+spec:
+  selector:
+    app: learning-adaptation
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5005

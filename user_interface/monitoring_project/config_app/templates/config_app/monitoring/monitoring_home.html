@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Monitoring Home{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="text-center mb-4">Monitoring Framework Interface</h1>
+                <p class="text-center">Select an option below:</p>
+                <div class="list-group mb-4">
+                    <a href="{% url 'monitoring_overview' %}" class="list-group-item list-group-item-action">Monitoring Dashboard</a>
+                    <a href="{% url 'task_manager' %}" class="list-group-item list-group-item-action">Manage Monitoring Tasks</a>
+                    <a href="{% url 'monitoring' %}" class="list-group-item list-group-item-action">Setup Monitoring</a>
+                </div>
+
+                {% if pod_names %}
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        Available Containers
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for value in pod_names %}
+                        <li class="list-group-item">{{ value }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <div class="alert alert-warning" role="alert">
+                    No pod data available. Please set up your configuration.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

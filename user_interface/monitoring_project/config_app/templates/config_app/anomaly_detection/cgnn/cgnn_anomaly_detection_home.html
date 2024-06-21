@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}CGNN Anomaly Detection{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="text-center mb-4">CGNN Anomaly Detection</h1>
+                <div class="list-group mb-4">
+                    <a href="{% url 'upload_cgnn_data' %}" class="list-group-item list-group-item-action">Perform Anomaly Detection</a>
+                    <a href="{% url 'config_cgnn' %}" class="list-group-item list-group-item-action">Update CGNN Algorithm Configuration</a>
+                </div>
+
+                {% if config %}
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        Current CGNN Prediction Configuration
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for key, value in config.items %}
+                        <li class="list-group-item"><strong>{{ key }}:</strong> {{ value }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <div class="alert alert-warning" role="alert">
+                    No configuration data available. Please set up your configuration.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

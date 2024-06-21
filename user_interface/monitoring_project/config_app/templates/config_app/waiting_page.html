@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Processing{% endblock %}
+
+{% block content %}
+    <h1>Processing...</h1>
+    <p id="status">Please wait while your request is being processed.</p>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        var task_id = "{{ task_id|safe }}";
+        var api_url = "{{ api_url|safe }}";
+        var task_type = "{{ task_type|safe }}";
+
+        function checkStatus() {
+            $.ajax({
+                url: api_url + "/get_status/" + task_id,
+                method: "GET",
+                success: function (data) {
+                    if (data.state === 'SUCCESS') {
+                        window.location.href = "{% url 'get_results' task_id task_type %}";
+                    } else if (data.state === 'FAILURE') {
+                        $('#status').text("Processing failed: " + data.status);
+                        clearInterval(interval);
+                    } else {
+                        $('#status').text("Status: " + data.status);
+                    }
+                },
+                error: function() {
+                    $('#status').text("An error occurred while checking the status.");
+                    clearInterval(interval);
+                }
+            });
+        }
+
+        var interval = setInterval(checkStatus, 5000);
+    </script>
+{% endblock %}

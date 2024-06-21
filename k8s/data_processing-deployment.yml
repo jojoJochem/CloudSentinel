@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-processing-deployment
+  namespace: CloudSentinel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-processing
+  template:
+    metadata:
+      labels:
+        app: data-processing
+    spec:
+      containers:
+      - name: data-processing
+        image: myrepo/data_processing:latest
+        ports:
+        - containerPort: 5002
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-processing-service
+  namespace: CloudSentinel
+spec:
+  selector:
+    app: data-processing
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5002

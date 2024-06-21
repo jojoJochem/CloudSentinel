@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Task Manager{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Task Manager</h1>
+    <div class="row">
+        <div class="col-md-12">
+            <h3 class="text-center my-4">Active Tasks</h3>
+            <ul id="activeTasksList" class="list-group mb-4 p-4 bg-light rounded shadow-sm"></ul>
+            <div id="taskDetails"></div>
+            <h3 class="text-center my-4">Results</h3>
+            <ul id="resultsList" class="list-group mb-4 p-4 bg-light rounded shadow-sm"></ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const dataIngestionUrl = "{{ data_ingestion_url|safe }}";
+    const cgnnUrl = "{{ cgnn_url|safe }}";
+    const crcaUrl = "{{ crca_url|safe }}";
+    let activeTasks = {};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchActiveTasks();
+        fetchResults();
+    });
+
+    async function fetchActiveTasks() {
+        const response = await fetch(`${dataIngestionUrl}/get_active_tasks`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        activeTasks = await response.json();
+        populateActiveTasksList();
+    }
+
+    function populateActiveTasksList() {
+        const activeTasksList = document.getElementById('activeTasksList');
+        activeTasksList.innerHTML = '';
+
+        if (Object.keys(activeTasks).length === 0) {
+            const noTasksItem = document.createElement('li');
+            noTasksItem.classList.add('list-group-item', 'text-center');
+            noTasksItem.textContent = 'No active tasks found.';
+            activeTasksList.appendChild(noTasksItem);
+        } else {
+            Object.keys(activeTasks).forEach(worker => {
+                activeTasks[worker].forEach(task => {
+                    const listItem = document.createElement('li');
+                    listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'flex-wrap');
+                    listItem.innerHTML = `<span class="task-id">Task ID: ${task.id}</span>`;
+                    const stopButton = document.createElement('button');
+                    stopButton.classList.add('btn', 'btn-danger', 'btn-sm', 'ml-2');
+                    stopButton.textContent = 'Stop';
+                    stopButton.onclick = () => stopTask(task.id);
+                    listItem.appendChild(stopButton);
+                    activeTasksList.appendChild(listItem);
+                });
+            });
+        }
+    }
+
+    async function stopTask(taskId) {
+        const response = await fetch(`${dataIngestionUrl}/stop_monitoring/${taskId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const result = await response.json();
+        alert(result.status);
+        fetchActiveTasks();
+    }
+
+    async function fetchResults() {
+        const response = await fetch(`${cgnnUrl}/get_all_results`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const results = await response.json();
+        populateResultsList(results);
+    }
+
+    function formatStartTime(startTime) {
+        const date = new Date(startTime * 1000);
+        return date.toLocaleString();
+    }
+
+    function populateResultsList(results) {
+        const resultsList = document.getElementById('resultsList');
+        resultsList.innerHTML = '';
+
+        if (Object.keys(results).length === 0) {
+            const noResultsItem = document.createElement('li');
+            noResultsItem.classList.add('list-group-item', 'text-center');
+            noResultsItem.textContent = 'No results found.';
+            resultsList.appendChild(noResultsItem);
+        } else {
+            Object.keys(results).forEach(taskId => {
+                const result = results[taskId];
+                const startTimeFormatted = formatStartTime(result.start_time);
+                const containersFormatted = result.containers.join(', ');
+                const metricsFormatted = result.metrics.join(', ');
+
+                const listItem = document.createElement('li');
+                listItem.classList.add('list-group-item', 'd-flex', 'flex-column');
+
+                const detailsDiv = document.createElement('div');
+                detailsDiv.innerHTML = `
+                    <strong>Task ID:</strong> ${taskId}<br>
+                    <strong>Start Time:</strong> ${startTimeFormatted}<br>
+                    <strong>Dataset:</strong> ${result.model}<br>
+                    <span class="expandable" onclick="toggleDetails(this)" style="cursor: pointer; color: blue; text-decoration: underline;">Show Containers and Metrics</span>
+                    <div class="details" style="display: none;">
+                        <strong>Containers:</strong> ${containersFormatted}<br>
+                        <strong>Metrics:</strong> ${metricsFormatted}
+                    </div>
+                `;
+
+                const buttonDiv = document.createElement('div');
+                buttonDiv.classList.add('mt-2', 'd-flex', 'justify-content-end');
+
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = () => deleteResult(taskId);
+
+                buttonDiv.appendChild(deleteButton);
+                listItem.appendChild(detailsDiv);
+                listItem.appendChild(buttonDiv);
+                resultsList.appendChild(listItem);
+            });
+        }
+    }
+
+    function toggleDetails(element) {
+        const detailsDiv = element.nextElementSibling;
+        if (detailsDiv.style.display === 'none') {
+            detailsDiv.style.display = 'block';
+            element.textContent = 'Hide Containers and Metrics';
+        } else {
+            detailsDiv.style.display = 'none';
+            element.textContent = 'Show Containers and Metrics';
+        }
+    }
+
+    async function deleteResult(taskId) {
+        const response = await fetch(`${cgnnUrl}/delete_results`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ taskId: taskId, crcaLink: crcaUrl }) // Send data in the request body
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const result = await response.json();
+        alert(result.success);
+        fetchResults();
+    }
+
+</script>
+{% endblock %}

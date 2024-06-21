@@ -1,0 +1,14 @@
+/0_controller
+/4_response_automation
+/7_security
+/8_utilities
+/.vscode
+/9_test_cases
+/data_ingestion/env_data_ingestion
+/data_ingestion/prometheus_setup
+/anomaly_detection/cgnn/env_cgnn
+/anomaly_detection/crca/env_CRCA
+/data_processing/env_processing
+/learning_adaptation/env_adaptation
+/user_interface/monitoring_project/env_django
+/user_interface/monitoring_project/monitoring_project/config.json

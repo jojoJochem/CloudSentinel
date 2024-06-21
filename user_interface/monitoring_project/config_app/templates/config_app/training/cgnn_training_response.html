@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Training Results{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <h1 class="mb-4">Available Models</h1>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% elif models %}
+        <form method="post" action="{% url 'training_result' %}">
+            {% csrf_token %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Model Name</th>
+                        <th>Model Params</th>
+                        <th>Model Config</th>
+                        <th>Model Evaluation</th>
+                        <th>Select</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for model_name, model_data in models.items %}
+                        <tr>
+                            <td>{{ model_name }}</td>
+                            <td><pre>{{ model_data.model_params | json_script:"model_params" }}</pre></td>
+                            <td><pre>{{ model_data.model_config | json_script:"model_config" }}</pre></td>
+                            <td><pre>{{ model_data.model_evaluation | json_script:"model_evaluation" }}</pre></td>
+                            <td><input type="radio" name="selected_model" value="{{ model_name }}"></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-primary">Send to Detection Module</button>
+        </form>
+    {% else %}
+        <p>No models available.</p>
+    {% endif %}
+</div>
+{% endblock %}

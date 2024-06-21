@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cgnn-anomaly-detection-deployment
+  namespace: CloudSentinel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cgnn-anomaly-detection
+  template:
+    metadata:
+      labels:
+        app: cgnn-anomaly-detection
+    spec:
+      containers:
+      - name: cgnn-anomaly-detection
+        image: myrepo/cgnn_anomaly_detection:latest
+        ports:
+        - containerPort: 5013
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cgnn-anomaly-detection-service
+  namespace: CloudSentinel
+spec:
+  selector:
+    app: cgnn-anomaly-detection
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5013

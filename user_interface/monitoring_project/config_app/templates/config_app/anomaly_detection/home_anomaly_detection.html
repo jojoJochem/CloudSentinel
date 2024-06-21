@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Perform Anomaly Detection{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="text-center mb-4">Perform Anomaly Detection</h1>
+                <p class="text-center">Select an option below:</p>
+                <div class="list-group mb-4">
+                    <a href="{% url 'perform_anomaly_detection_cgnn' %}" class="list-group-item list-group-item-action">CGNN Anomaly Detection</a>
+                    <a href="{% url 'perform_anomaly_detection_crca' %}" class="list-group-item list-group-item-action">CRCA Anomaly Detection</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

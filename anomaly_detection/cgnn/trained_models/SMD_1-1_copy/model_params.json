@@ -1,0 +1,17 @@
+{
+    "dataset": "SMD 1-1",
+    "comment": "",
+    "metrics": [
+        "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods",
+        "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods",
+        "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods",
+        "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods",
+        "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods", "cpu_usage_pods"
+    ],
+    "containers": ["container_1"],
+    "data_entries": 2987,
+    "duration": 60000,
+    "step_size": 60,
+    "anomaly_sequence": false
+}
+

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Pod Names and Datetime Selection{% endblock %}
+
+{% block content %}
+    <h1>Select Pod Names and Time Range</h1>
+    <form method="post" action="{% url 'chosen_crca' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="start_datetime" class="form-label">Start Datetime</label>
+            <input type="datetime-local" id="start_datetime" name="start_datetime" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="end_datetime" class="form-label">End Datetime</label>
+            <input type="datetime-local" id="end_datetime" name="end_datetime" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Time Interval (seconds)</label>
+            <input type="text" id="interval_seconds" class="form-control" readonly>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Select Pod Names</label>
+            <div class="list-group">
+                {% for pod in pod_names %}
+                    <label class="list-group-item">
+                        <input type="checkbox" name="selected_pod_names" value="{{ pod }}" class="form-check-input">
+                        {{ pod }}
+                    </label>
+                {% endfor %}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">Submit</button>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const startDatetimeInput = document.getElementById('start_datetime');
+            const endDatetimeInput = document.getElementById('end_datetime');
+            const intervalInput = document.getElementById('interval_seconds');
+
+            function updateInterval() {
+                const startDatetime = new Date(startDatetimeInput.value);
+                const endDatetime = new Date(endDatetimeInput.value);
+                if (!isNaN(startDatetime.getTime()) && !isNaN(endDatetime.getTime())) {
+                    const intervalSeconds = (endDatetime - startDatetime) / 1000;
+                    intervalInput.value = intervalSeconds >= 0 ? intervalSeconds : 'Invalid interval';
+                } else {
+                    intervalInput.value = '';
+                }
+            }
+
+            startDatetimeInput.addEventListener('change', updateInterval);
+            endDatetimeInput.addEventListener('change', updateInterval);
+        });
+    </script>
+{% endblock %}

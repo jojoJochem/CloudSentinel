@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load json_script %}
+
+{% block title %}Monitoring Configuration{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h1 class="text-center mb-4">Monitoring Configuration</h1>
+
+            <div class="mb-4">
+                <h3 class="mb-3">Available Models</h3>
+                <i><small>(click to toggle details)</small></i>
+                {% for model, details in models.items %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" onclick="toggleDetails('{{ model }}')" style="cursor: pointer;">
+                        <h5 class="mb-0">{{ model }}</h5>
+                        <span class="ml-auto">&#9660;</span>
+                    </div>
+                    <div id="details-{{ model }}" class="card-body" style="display: none;">
+                        <h5>Model Parameters</h5>
+                        <div>
+                            <strong>Metrics:</strong> {{ details.model_params.metrics|join:", " }}  ({{ details.model_params.metrics|length }} in total)<br>
+                            <strong>Containers:</strong> {{ details.model_params.containers|join:", " }}  ({{ details.model_params.containers|length }} in total)<br>
+                            <strong>Data Entries:</strong> {{ details.model_params.data_entries }}<br>
+                            <strong>Duration:</strong> {{ details.model_params.duration }} seconds<br>
+                            <strong>Step Size:</strong> {{ details.model_params.step_size }} seconds<br>
+                        </div>
+                        <br>
+                        <h5>Evaluation Summary</h5>
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Evaluation Type</th>
+                                    {% for key in details.model_evaluation.epsilon_result.keys %}
+                                    <th>{{ key }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result_type, result_data in details.model_evaluation.items %}
+                                <tr>
+                                    <th>{{ result_type }}</th>
+                                    {% for value in result_data.values %}
+                                    <td>{{ value|floatformat:4 }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <form id="monitoring-form" method="post" class="mb-5">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div id="crca-config-summary" class="small mt-3" style="display: none;">
+                    <h5>CRCA Configuration</h5>
+                    <ul id="crca-config-list"></ul>
+                </div>
+                <button type="button" class="btn btn-secondary w-100 mb-3" onclick="toggleOverlay()">Configure CRCA</button>
+                <button type="submit" class="btn btn-success w-100">Start Monitoring</button>
+                <input type="hidden" id="crca-config-data" name="crca_config_data">
+            </form>
+
+            <div id="crca-config-overlay" class="overlay" style="display:none;">
+                <div class="overlay-content">
+                    <span class="closebtn" onclick="toggleOverlay()">&times;</span>
+                    <h2>CRCA Configuration</h2>
+                    <form id="crca-config-form">
+                        {% csrf_token %}
+                        {% for field in crca_form %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                            </div>
+                        {% endfor %}
+                        <button type="button" class="btn btn-primary" onclick="applyCRCAConfig()">Apply CRCA Config</button>
+                    </form>
+                </div>
+            </div>
+
+
+
+            <script>
+                function toggleDetails(model) {
+                    var details = document.getElementById('details-' + model);
+                    if (details.style.display === 'none') {
+                        details.style.display = 'block';
+                    } else {
+                        details.style.display = 'none';
+                    }
+                }
+
+                function toggleOverlay() {
+                    var overlay = document.getElementById('crca-config-overlay');
+                    if (overlay.style.display === 'none' || overlay.style.display === '') {
+                        overlay.style.display = 'block';
+                    } else {
+                        overlay.style.display = 'none';
+                    }
+                }
+
+                function applyCRCAConfig() {
+                    var crcaForm = document.getElementById('crca-config-form');
+                    var formData = new FormData(crcaForm);
+                    var crcaConfig = {};
+                    var crcaConfigList = document.getElementById('crca-config-list');
+                    crcaConfigList.innerHTML = '';
+
+                    formData.forEach((value, key) => {
+                        crcaConfig[key] = value;
+                        var li = document.createElement('li');
+                        li.textContent = key + ': ' + value;
+                        crcaConfigList.appendChild(li);
+                    });
+
+                    document.getElementById('crca-config-data').value = JSON.stringify(crcaConfig);
+                    document.getElementById('crca-config-summary').style.display = 'block';
+                    toggleOverlay();
+                }
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    document.getElementById('monitoring-form').addEventListener('submit', function (event) {
+                        event.preventDefault();
+
+                        var formData = new FormData(this);
+                        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                        fetch("{% url 'monitoring' %}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                window.location.href = "{% url 'monitoring_overview' %}";
+                            } else {
+                                alert('Failed to start monitoring: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                    });
+                });
+            </script>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<style>
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: none;
+        z-index: 1000;
+    }
+    .overlay-content {
+        position: relative;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        padding: 20px;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 8px;
+    }
+    .closebtn {
+        position: absolute;
+        top: 10px;
+        right: 25px;
+        font-size: 35px;
+        cursor: pointer;
+    }
+</style>

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Train Algorithms{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="text-center mb-4">Train Algorithms</h1>
+                <p class="text-center">Select an algorithm to train:</p>
+                <div class="list-group mb-4">
+                    <a href="{% url 'train_cgnn' %}" class="list-group-item list-group-item-action">Train CGNN</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Select Training Data
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h1 class="text-center mb-4">Select Training Data</h1>
+            <div class="mb-4">
+                <h2>Available Datasets</h2>
+                {% for dataset in datasets %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" onclick="toggleDetails('{{ dataset.name }}')" style="cursor: pointer;">
+                        <h3 class="mb-0">{{ dataset.name }}</h3>
+                        <span class="ml-auto">&#9660;</span>
+                    </div>
+                    <div id="details-{{ dataset.name }}" class="card-body" style="display: none;">
+                        <h4>Dataset Details</h4>
+                        <pre>{{ dataset.data|json_script:"details_" }}</pre>
+                        <div>
+                            <strong>Metrics:</strong> {{ dataset.data.metrics|join:", " }}<br>
+                            <strong>Containers:</strong> {{ dataset.data.containers|join:", " }}<br>
+                            <strong>Data Entries:</strong> {{ dataset.data.data_entries }}<br>
+                            <strong>Duration:</strong> {{ dataset.data.duration }}<br>
+                            <strong>Step Size:</strong> {{ dataset.data.step_size }}<br>
+                            <strong>Anomaly Sequence:</strong> {{ dataset.data.anomaly_sequence }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <form method="post" class="mb-5">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="dataset" class="form-label">Select Dataset:</label>
+                    <select id="dataset" name="dataset" class="form-select">
+                        <option value="">-- Select a Dataset --</option>
+                        {% for dataset in datasets %}
+                        <option value="{{ dataset.name }}">{{ dataset.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="selection-details">
+                    <!-- Container and Metrics selection will be populated here by JavaScript -->
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">Submit</button>
+            </form>
+
+            {% if result %}
+            <h2>Detection Results</h2>
+            <div class="alert alert-info">
+                <pre>{{ result }}</pre>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    const datasets = {{ datasets_json|safe }};
+
+    document.getElementById('dataset').addEventListener('change', function() {
+        const selectedDataset = this.value;
+        const details = datasets.find(dataset => dataset.name === selectedDataset).data;
+
+        let detailsDiv = document.getElementById('selection-details');
+        detailsDiv.innerHTML = '';
+
+        if (details) {
+            let containersHtml = '<div class="mb-3"><label class="form-label">Select Containers:</label><br>';
+            containersHtml += '<div class="form-check"><input class="form-check-input" type="checkbox" id="selectAllContainers"><label class="form-check-label" for="selectAllContainers">Select All</label></div>';
+            details.containers.forEach(container => {
+                containersHtml += `<div class="form-check"><input class="form-check-input container-checkbox" type="checkbox" name="containers" value="${container}" id="${container}"><label class="form-check-label" for="${container}">${container}</label></div>`;
+            });
+            containersHtml += '</div>';
+
+            let metricsHtml = '<div class="mb-3"><label class="form-label">Select Metrics:</label><br>';
+            metricsHtml += '<div class="form-check"><input class="form-check-input" type="checkbox" id="selectAllMetrics"><label class="form-check-label" for="selectAllMetrics">Select All</label></div>';
+            details.metrics.forEach(metric => {
+                metricsHtml += `<div class="form-check"><input class="form-check-input metric-checkbox" type="checkbox" name="metrics" value="${metric}" id="${metric}"><label class="form-check-label" for="${metric}">${metric}</label></div>`;
+            });
+            metricsHtml += '</div>';
+
+            detailsDiv.innerHTML = containersHtml + metricsHtml;
+
+            document.getElementById('selectAllContainers').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.container-checkbox');
+                checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+            });
+
+            document.getElementById('selectAllMetrics').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.metric-checkbox');
+                checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+            });
+        }
+    });
+
+    function toggleDetails(datasetName) {
+        var details = document.getElementById('details-' + datasetName);
+        if (details.style.display === 'none') {
+            details.style.display = 'block';
+        } else {
+            details.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,128 @@
+body {
+    background-color: #f4f6f9;
+    padding-top: 56px; /* Height of the navbar */
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Roboto' !important;
+}
+#overlay {
+    position: fixed;
+    display: none;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 2;
+    cursor: pointer;
+}
+#overlay-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+}
+.sidebar {
+    height: calc(100vh - 56px);
+    position: fixed;
+    top: 56px;
+    left: 0;
+    width: 250px;
+    background-color: #273441;
+    padding-top: 20px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+.sidebar a {
+    padding: 10px 15px;
+    text-decoration: none;
+    font-size: 18px;
+    color: #d1d1d1;
+    display: block;
+}
+.sidebar a:hover {
+    background-color: #575d63;
+    color: white;
+}
+.content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+    transition: margin-left 0.3s;
+}
+.with-sidebar {
+    margin-left: 250px;
+}
+.without-sidebar {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 800px;
+}
+.task-details {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    flex-shrink: 0;
+}
+.chart-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.dropdown-submenu {
+    position: relative;
+}
+.dropdown-submenu .dropdown-menu {
+    top: 0;
+    left: -100%;
+    margin-left: -1px;
+}
+.dropdown-menu > .dropdown-submenu > .dropdown-menu {
+    display: none;
+}
+.dropdown-menu > .dropdown-submenu:hover > .dropdown-menu {
+    display: block;
+}
+.navbar-brand-wrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.navbar {
+    background-color: #004080!important;
+}
+.navbar .navbar-brand, .navbar .nav-link {
+    color: white !important;
+}
+.navbar-brand:hover, .nav-link:hover {
+    color: #eae8e8 !important;
+}
+.navbar-brand img {
+    height: 30px;
+    margin-right: 10px;
+}
+.navbar-brand {
+    font-family:  'Montserrat';
+    font-size: 30px;
+    color: #333;
+}
+.card-header {
+    background-color: #283c50 !important;
+}
+.btnnn {
+    margin-right: 10px;
+}
+

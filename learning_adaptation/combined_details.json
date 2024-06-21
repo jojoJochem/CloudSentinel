@@ -1,0 +1,40 @@
+{
+    "SMD_1-2": {
+        "dataset": "SMD 1-2",
+        "comment": "",
+        "metrics": [
+            "CPuuuuU",
+            "MEM",
+            "NET",
+            "DISK"
+        ],
+        "containers": [
+            "container_1",
+            "container_2",
+            "container_3"
+        ],
+        "data_entries": 2987,
+        "duration": 60000,
+        "step_size": 60,
+        "anomaly_sequence": false
+    },
+    "SMD_1-1": {
+        "dataset": "SMD 1-1",
+        "comment": "",
+        "metrics": [
+            "CPU",
+            "MEM",
+            "NET",
+            "DISK"
+        ],
+        "containers": [
+            "container_1",
+            "container_2",
+            "container_3"
+        ],
+        "data_entries": 2987,
+        "duration": 60000,
+        "step_size": 60,
+        "anomaly_sequence": false
+    }
+}
