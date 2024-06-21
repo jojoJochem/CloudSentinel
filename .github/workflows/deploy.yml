@@ -24,20 +24,20 @@ jobs:
 
     - name: Build and push Docker images
       run: |
+        docker build -t crca_anomaly_detection:latest -f anomaly_detection/crca/Dockerfile anomaly_detection/crca/
         docker build -t data_ingestion:latest -f data_ingestion/Dockerfile data_ingestion/
         docker build -t data_processing:latest -f data_processing/Dockerfile data_processing/
         docker build -t cgnn_anomaly_detection:latest -f anomaly_detection/cgnn/Dockerfile anomaly_detection/cgnn/
-        docker build -t crca_anomaly_detection:latest -f anomaly_detection/crca/Dockerfile anomaly_detection/crca/
         docker build -t learning_adaptation:latest -f learning_adaptation/Dockerfile learning_adaptation/
+        docker tag crca_anomaly_detection:latest myrepo/anomaly_detection/crca:latest
         docker tag data_ingestion:latest myrepo/data_ingestion:latest
         docker tag data_processing:latest myrepo/data_processing:latest
         docker tag cgnn_anomaly_detection:latest myrepo/anomaly_detection/cgnn:latest
-        docker tag crca_anomaly_detection:latest myrepo/anomaly_detection/crca:latest
         docker tag learning_adaptation:latest myrepo/learning_adaptation:latest
+        docker push myrepo/anomaly_detection/crca:latest
         docker push myrepo/data_ingestion:latest
         docker push myrepo/data_processing:latest
-        docker push myrepo/cgnn_anomaly_detection:latest
-        docker push myrepo/crca_anomaly_detection:latest
+        docker push myrepo/anomaly_detection/crca:latest
         docker push myrepo/learning_adaptation:latest
 
     - name: Set up Kubernetes
