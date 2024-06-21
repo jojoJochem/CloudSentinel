@@ -12,7 +12,6 @@ def get_config():
 
 
 def set_config(new_config=None):
-    # Update the configuration file with new settings
     config = get_config()
     if new_config:
         config.update(new_config)

@@ -85,7 +85,9 @@ def get_data(test_array, data_dim, train_array=None, anomaly_label_array=None):
         print("train set shape: ", train_data.shape)
         print("test set shape: ", test_data.shape)
         print("test set label shape: ", None if anomaly_data is None else anomaly_data.shape)
-        return pd.DataFrame(train_data).to_csv(index=False, header=False), pd.DataFrame(test_data).to_csv(index=False, header=False), pd.DataFrame(anomaly_data).to_csv(index=False, header=False)
+        return (pd.DataFrame(train_data).to_csv(index=False, header=False),
+                pd.DataFrame(test_data).to_csv(index=False, header=False),
+                pd.DataFrame(anomaly_data).to_csv(index=False, header=False))
     else:
         test_data, _ = normalize_data(test_data, scaler=None)
         print("test set shape: ", test_data.shape)

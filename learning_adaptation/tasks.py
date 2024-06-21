@@ -19,8 +19,8 @@ celery = Celery('tasks', backend='redis://localhost:6379/2', broker='redis://loc
 def train_and_evaluate_task(self, train_array, test_array, anomaly_label_array, train_info):
     try:
         logger.info("Starting the training process.")
-        model, model_config = train(train_info['data'], np.array(train_array, dtype=np.float32), np.array(test_array, dtype=np.float32),
-                                    np.array(anomaly_label_array, dtype=np.float32))
+        model, model_config = train(train_info['data'], np.array(train_array, dtype=np.float32),
+                                    np.array(test_array, dtype=np.float32), np.array(anomaly_label_array, dtype=np.float32))
         logger.info("Training completed.")
 
         logger.info("Starting the evaluation process.")

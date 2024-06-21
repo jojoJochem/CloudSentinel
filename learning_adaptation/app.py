@@ -101,7 +101,7 @@ def save_to_detection_module():
     try:
         model_info_json = json.dumps(model_info)
         response = requests.post(model_info['settings']['API_CGNN_ANOMALY_DETECTION_URL'] + '/save_model',
-                      files={'model': model_json}, data={'model_info': model_info_json})
+                                 files={'model': model_json}, data={'model_info': model_info_json})
 
         if response.status_code == 200:
             shutil.rmtree(path)
@@ -148,8 +148,8 @@ def cgnn_train_with_existing_dataset():
     selected_metrics = train_info['data']['metrics']
 
     selected_headers = [f"{container}_{metric}" for container in selected_containers for metric in selected_metrics]
-    train_array_filtered = train_array  # [selected_headers]
-    test_array_filtered = test_array  # [selected_headers]
+    train_array_filtered = train_array[selected_headers]
+    test_array_filtered = test_array[selected_headers]
 
     train_files = {
         'train_array': train_array_filtered.to_csv(header=False, index=False),

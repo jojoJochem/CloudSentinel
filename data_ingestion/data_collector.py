@@ -62,7 +62,6 @@ def fetch_metrics(pod_names, metric_queries, start_time, end_time, url, step=60)
                 master_df = pd.merge(master_df, metric_df, on='timestamp', how='left')
                 logging.info("\tQuery successful, data merged.")
 
-
     # Fill missing data
     master_df.ffill(inplace=True)
     master_df.bfill(inplace=True)

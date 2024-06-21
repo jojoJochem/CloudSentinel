@@ -55,7 +55,8 @@ def monitoring_task(self, monitor_info):
             requests.post(f"{test_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_data",
                           files=test_files, data={'test_info': test_info_json})
         except Exception:
-            logger.error(traceback.format_exc())
+            pass
+            # logger.error(traceback.format_exc())
         time.sleep(test_info['data']['test_interval'] * 60)
         iteration += 1
 
@@ -112,7 +113,7 @@ def anomaly_rca():
         response = collect_crca_data(data)
         return response
     except Exception as e:
-        logger.error(traceback.format_exc())
+        # logger.error(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
 
@@ -158,23 +159,19 @@ def load_config():
         config.load_kube_config(request.json['kube_config_path'])
         return jsonify({"message": "Kubernetes configuration loaded successfully."}), 200
     except FileNotFoundError as e:
-        # Log the error
-        logging.error("Kubernetes configuration file not found: %s", str(e))
+        # logging.error("Kubernetes configuration file not found: %s", str(e))
         return jsonify({"error": "Kubernetes configuration file not found"}), 400  # Bad Request
 
     except config.ConfigException as e:
-        # Log the error
-        logging.error("Error loading Kubernetes configuration: %s", str(e))
+        # logging.error("Error loading Kubernetes configuration: %s", str(e))
         return jsonify({"error": "Invalid Kubernetes configuration"}), 400  # Bad Request
 
     except ConnectionError as e:
-        # Log the error
-        logging.error("Could not connect to Kubernetes cluster: %s", str(e))
+        # logging.error("Could not connect to Kubernetes cluster: %s", str(e))
         return jsonify({"error": "Could not connect to Kubernetes cluster"}), 503  # Service Unavailable
 
     except Exception as e:  # Catch-all for other unexpected errors
-        # Log the error
-        logging.error("Unexpected error: %s", str(e))
+        # logging.error("Unexpected error: %s", str(e))
         return jsonify({"error": "Internal Server Error"}), 500
 
 
