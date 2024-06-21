@@ -31,8 +31,8 @@ jobs:
         docker build -t learning_adaptation:latest -f learning_adaptation/Dockerfile learning_adaptation/
         docker tag data_ingestion:latest myrepo/data_ingestion:latest
         docker tag data_processing:latest myrepo/data_processing:latest
-        docker tag cgnn_anomaly_detection:latest myrepo/cgnn_anomaly_detection:latest
-        docker tag crca_anomaly_detection:latest myrepo/crca_anomaly_detection:latest
+        docker tag cgnn_anomaly_detection:latest myrepo/anomaly_detection/cgnn:latest
+        docker tag crca_anomaly_detection:latest myrepo/anomaly_detection/crca:latest
         docker tag learning_adaptation:latest myrepo/learning_adaptation:latest
         docker push myrepo/data_ingestion:latest
         docker push myrepo/data_processing:latest
