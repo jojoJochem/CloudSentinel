@@ -25,18 +25,20 @@ jobs:
     - name: Build and push Docker images
       run: |
         docker build -t ${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest -f data_ingestion/Dockerfile data_ingestion/
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/data_processing:latest -f data_processing/Dockerfile data_processing/
+        # docker build -t ${{ secrets.DOCKER_USERNAME }}/data_processing:latest -f data_processing/Dockerfile data_processing/
         # docker build -t ${{ secrets.DOCKER_USERNAME }}/anomaly_detection/cgnn:latest -f anomaly_detection/cgnn/Dockerfile anomaly_detection/cgnn/
         # docker build -t ${{ secrets.DOCKER_USERNAME }}/anomaly_detection/crca:latest -f anomaly_detection/crca/Dockerfile anomaly_detection/crca/
         # docker build -t ${{ secrets.DOCKER_USERNAME }}/learning_adaptation:latest -f learning_adaptation/Dockerfile learning_adaptation/
         # docker build -t ${{ secrets.DOCKER_USERNAME }}/django:latest django:latest -f user_interface/monitoring_project/Dockerfile user_interface/monitoring_project/
         docker push ${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest
-        docker push ${{ secrets.DOCKER_USERNAME }}/data_processing:latest
+        # docker push ${{ secrets.DOCKER_USERNAME }}/data_processing:latest
         # docker push ${{ secrets.DOCKER_USERNAME }}/anomaly_detection/cgnn:latest
         # docker push ${{ secrets.DOCKER_USERNAME }}/anomaly_detection/crca:latest
         # docker push ${{ secrets.DOCKER_USERNAME }}/learning_adaptation:latest
         # docker push ${{ secrets.DOCKER_USERNAME }}/django:latest
-
+    - name: Create .kube directory
+      run: |
+        mkdir -p $HOME/.kube
     - name: Set up kubeconfig
       run: |
         echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
@@ -52,7 +54,7 @@ jobs:
         kubectl apply -f k8s/data_ingestion_celery-deployment.yml
         kubectl apply -f k8s/redis-deployment.yml
         kubectl apply -f k8s/data_ingestion-deployment.yml
-        kubectl apply -f k8s/data_processing-deployment.yml
+        # kubectl apply -f k8s/data_processing-deployment.yml
         # kubectl apply -f k8s/cgnn_anomaly_detection-deployment.yml
         # kubectl apply -f k8s/crca_anomaly_detection-deployment.yml
         # kubectl apply -f k8s/learning_adaptation-deployment.yml
