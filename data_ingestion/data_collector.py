@@ -1,5 +1,5 @@
 import requests
-import logging
+# import logging
 import pandas as pd
 import time
 import json
@@ -7,7 +7,7 @@ from flask import Response
 
 from config import get_config
 
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 
 
 def get_metrics_test():
@@ -51,7 +51,7 @@ def fetch_metrics(pod_names, metric_queries, start_time, end_time, url, step=60)
         for metric in metric_queries:
             query = metrics_config[metric]['query'].format(pod=pod)
             results = query_prometheus(query, start_time, end_time, url, step)
-            logging.info(f"{pod} {metric}")
+            # logging.info(f"{pod} {metric}")
             if results:
                 timestamps = [pd.Timestamp.fromtimestamp(int(value[0])) for value in results[0]['values']]
                 measures = [float(value[1]) for value in results[0]['values']]
@@ -60,7 +60,7 @@ def fetch_metrics(pod_names, metric_queries, start_time, end_time, url, step=60)
                     f"{pod}_{metric}": measures
                 })
                 master_df = pd.merge(master_df, metric_df, on='timestamp', how='left')
-                logging.info("\tQuery successful, data merged.")
+                # logging.info("\tQuery successful, data merged.")
 
     # Fill missing data
     master_df.ffill(inplace=True)
@@ -79,9 +79,10 @@ def query_prometheus(query, start_time, end_time, url, step=5):
         results = response.json()['data']['result']
         return results
     except requests.exceptions.HTTPError as err:
-        logging.error(f"HTTP error occurred: {err}")
-    except Exception as err:
-        logging.error(f"Other error occurred: {err}")
+        pass
+    #     logging.error(f"HTTP error occurred: {err}")
+    # except Exception as err:
+    #     logging.error(f"Other error occurred: {err}")
 
 
 if __name__ == '__main__':
