@@ -12,8 +12,8 @@ COPY requirements.txt /app/
 
 # Install the required packages
 RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
-RUN python -m pip install scikit_network==0.31.0
+RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir scikit_network==0.31.0
 
 # Copy the rest of the application code into the container
 COPY . /app/
