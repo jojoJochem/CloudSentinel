@@ -1,0 +1,10 @@
+{
+    "API_DATA_INGESTION_URL": "http://127.0.0.1:5001",
+    "API_DATA_PROCESSING_URL": "http://127.0.0.1:5002",
+    "API_CRCA_ANOMALY_DETECTION_URL": "http://127.0.0.1:5023",
+    "API_CGNN_ANOMALY_DETECTION_URL": "http://127.0.0.1:5013",
+    "API_LEARNING_ADAPTATION_URL": "http://127.0.0.1:5005",
+    "PROMETHEUS_URL": "http://127.0.0.1:55725",
+    "CLUSTER_NAMESPACE": "kube-system",
+    "KUBE_CONFIG_PATH": "/Users/jochemvangaalen/.kube/config"
+}

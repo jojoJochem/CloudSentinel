@@ -11,4 +11,3 @@
 /data_processing/env_processing
 /learning_adaptation/env_adaptation
 /user_interface/monitoring_project/env_django
-/user_interface/monitoring_project/monitoring_project/config.json

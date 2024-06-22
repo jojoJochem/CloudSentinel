@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: crca-anomaly-detection-celery
-        image: myrepo/crca_anomaly_detection:latest
+        image: myrepo/anomaly_detection/crca:latest
         command: ["celery", "-A", "tasks.celery", "worker", "--loglevel=info", "-P", "gevent"]
         env:
         - name: CELERY_BROKER_URL
