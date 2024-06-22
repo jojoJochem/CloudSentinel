@@ -24,24 +24,18 @@ jobs:
 
     - name: Build and push Docker images
       run: |
-        # docker build -t crca_anomaly_detection:latest -f anomaly_detection/crca/Dockerfile anomaly_detection/crca/
-        docker build -t data_ingestion:latest -f data_ingestion/Dockerfile data_ingestion/
-        docker build -t data_processing:latest -f data_processing/Dockerfile data_processing/
-        docker build -t cgnn_anomaly_detection:latest -f anomaly_detection/cgnn/Dockerfile anomaly_detection/cgnn/
-        docker build -t learning_adaptation:latest -f learning_adaptation/Dockerfile learning_adaptation/
-        docker build -t django:latest -f user_interface/monitoring_project/Dockerfile user_interface/monitoring_project/
-        # docker tag crca_anomaly_detection:latest myrepo/anomaly_detection/crca:latest
-        docker tag data_ingestion:latest myrepo/data_ingestion:latest
-        docker tag data_processing:latest myrepo/data_processing:latest
-        docker tag cgnn_anomaly_detection:latest myrepo/anomaly_detection/cgnn:latest
-        docker tag learning_adaptation:latest myrepo/learning_adaptation:latest
-        docker tag django:latest myrepo/django:latest
-        # docker push myrepo/anomaly_detection/crca:latest
+        docker build -t myrepo/data_ingestion:latest -f data_ingestion/Dockerfile data_ingestion/
+        docker build -t myrepo/data_processing:latest -f data_processing/Dockerfile data_processing/
+        docker build -t myrepo/anomaly_detection/cgnn:latest -f anomaly_detection/cgnn/Dockerfile anomaly_detection/cgnn/
+        # docker build -t myrepo/anomaly_detection/crca:latest -f anomaly_detection/crca/Dockerfile anomaly_detection/crca/
+        # docker build -t myrepo/learning_adaptation:latest -f learning_adaptation/Dockerfile learning_adaptation/
+        # docker build -t myrepo/django:latest django:latest -f user_interface/monitoring_project/Dockerfile user_interface/monitoring_project/
         docker push myrepo/data_ingestion:latest
         docker push myrepo/data_processing:latest
-        docker push myrepo/anomaly_detection/crca:latest
-        docker push myrepo/learning_adaptation:latest
-        docker push myrepo/django:latest
+        docker push myrepo/anomaly_detection/cgnn:latest
+        # docker push myrepo/anomaly_detection/crca:latest
+        # docker push myrepo/learning_adaptation:latest
+        # docker push myrepo/django:latest
 
     - name: Set up Kubernetes
       uses: azure/k8s-set-context@v1
