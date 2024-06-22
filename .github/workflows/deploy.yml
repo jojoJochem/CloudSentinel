@@ -45,7 +45,7 @@ jobs:
 
     - name: Deploy to Kubernetes
       run: |
-        kubectl apply -f k8s/celery-worker-deployment.yml
+        kubectl apply -f k8s/data_ingestion_celery-deployment.yml
         kubectl apply -f k8s/redis-deployment.yml
         kubectl apply -f k8s/data_ingestion-deployment.yml
         kubectl apply -f k8s/data_processing-deployment.yml
