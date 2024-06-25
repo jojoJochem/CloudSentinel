@@ -30,8 +30,6 @@ urlpatterns = [
     path('upload-crca-data/', upload_crca_data, name='upload_crca_data'),
 
     path('perform-anomaly-detection-cgnn/', perform_anomaly_detection_cgnn, name='perform_anomaly_detection_cgnn'),
-    # path('cgnn-models/', cgnn_models, name='cgnn_models'),
-    # path('predict-cgnn-result/', predict_cgnn_result, name='predict_cgnn_result'),
     path('upload-cgnn-data/', upload_cgnn_data, name='upload_cgnn_data'),
 
     path('monitoring-home/', monitoring_home, name='monitoring_home'),

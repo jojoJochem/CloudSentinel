@@ -18,5 +18,6 @@ RUN python -m pip install --no-cache-dir scikit_network==0.31.0
 # Copy the rest of the application code into the container
 COPY . /app/
 
+EXPOSE 5023
 # Define the command to run the application
 CMD ["flask", "run", "--host=0.0.0.0", "--port=5023"]

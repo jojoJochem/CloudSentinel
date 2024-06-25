@@ -9,7 +9,7 @@ os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
 logger = logging.getLogger(__name__)
 
-celery = Celery('tasks', backend='redis://localhost:6379/1', broker='redis://localhost:6379/1')
+celery = Celery('tasks', backend='redis://redis:6379/1', broker='redis://redis:6379/1')
 
 # celery -A tasks worker --loglevel=info -P gevent
 

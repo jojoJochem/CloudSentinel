@@ -8,15 +8,34 @@ from celery import Celery
 from cgnn.train import train
 from cgnn.evaluate_prediction import predict_and_evaluate
 
+# Initialize logger
 logger = logging.getLogger(__name__)
 
-celery = Celery('tasks', backend='redis://localhost:6379/2', broker='redis://localhost:6379/2')
+# Configure Celery
+celery = Celery('tasks', backend='redis://redis:6379/2', broker='redis://redis:6379/2')
 
+# Command to run the Celery worker:
 # celery -A tasks worker --loglevel=info
 
 
 @celery.task(bind=True)
 def train_and_evaluate_task(self, train_array, test_array, anomaly_label_array, train_info):
+    """
+    Celery task to train and evaluate a CGNN model.
+
+    Args:
+        self (Task): The Celery task instance.
+        train_array (list): Training data array.
+        test_array (list): Testing data array.
+        anomaly_label_array (list): Anomaly label array.
+        train_info (dict): Training information and settings.
+
+    Returns:
+        str: Success message if training is completed successfully.
+
+    Raises:
+        Exception: Retries the task if an exception occurs.
+    """
     try:
         logger.info("Starting the training process.")
         model, model_config = train(train_info['data'], np.array(train_array, dtype=np.float32),
@@ -28,16 +47,14 @@ def train_and_evaluate_task(self, train_array, test_array, anomaly_label_array, 
                              np.array(test_array, dtype=np.float32), np.array(anomaly_label_array, dtype=np.float32))
         logger.info("Evaluation completed.")
 
-        os.makedirs(f"trained_models_temp/{model_config['dataset']}_{model_config['id']}", exist_ok=True)
-        with open(f"trained_models_temp/{model_config['dataset']}_{model_config['id']}/model_params.json", "w") as f:
+        # Create directory for saving model parameters
+        model_dir = f"trained_models_temp/{model_config['dataset']}_{model_config['id']}"
+        os.makedirs(model_dir, exist_ok=True)
+
+        # Save model parameters to JSON file
+        with open(f"{model_dir}/model_params.json", "w") as f:
             json.dump(train_info['data'], f, indent=2)
 
-        # model_data = {
-        #     'model': model_json,
-        #     'model_params': train_info['data'],
-        #     'model_config': model_config,
-        #     'model_evaluation': model_evaluation
-        # }
         return "Training Successful"
     except Exception as e:
         logger.error(traceback.format_exc())

@@ -1,8 +1,6 @@
-# app.py
 from flask import Flask, request, jsonify, Response
 import pandas as pd
 import numpy as np
-# from collections import OrderedDict
 import json
 import logging
 import traceback
@@ -16,21 +14,28 @@ from flask_cors import CORS
 from cgnn.config import set_config, get_config, set_initial_config
 from tasks import train_and_evaluate_task
 
+# Initialize Flask app and configure CORS
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-app.config.update(
-    CELERY_BROKER_URL='redis://localhost:6379/2',
-    CELERY_RESULT_BACKEND='redis://localhost:6379/2'
-)
 
+# Configure Celery
+app.config.update(
+    CELERY_BROKER_URL='redis://redis:6379/2',
+    CELERY_RESULT_BACKEND='redis://redis:6379/2'
+)
 celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'], broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
 
 @app.route('/cgnn_train_model', methods=['POST'])
 def cgnn_train_models():
+    """
+    Handles the training request for CGNN models.
+    """
     try:
         train_files = request.files
         train_info_json = request.form.get('train_info')
@@ -53,6 +58,15 @@ def cgnn_train_models():
 
 @app.route('/get_status/<task_id>', methods=['GET'])
 def get_status(task_id):
+    """
+    Retrieves the status of a Celery task.
+
+    Args:
+        task_id (str): The ID of the task.
+
+    Returns:
+        json: The task status and info.
+    """
     task = train_and_evaluate_task.AsyncResult(task_id)
     if task.state == 'PENDING':
         response = {
@@ -74,6 +88,12 @@ def get_status(task_id):
 
 @app.route('/get_available_models', methods=['GET'])
 def get_available_models():
+    """
+    Retrieves the available trained models.
+
+    Returns:
+        json: A dictionary of models with their parameters, configuration, and evaluation.
+    """
     model_dir = 'trained_models_temp'
     models = {}
     for model_name in os.listdir(model_dir):
@@ -91,6 +111,12 @@ def get_available_models():
 
 @app.route('/save_to_detection_module', methods=['POST'])
 def save_to_detection_module():
+    """
+    Saves a trained model to the detection module.
+
+    Returns:
+        json: Success message or error details.
+    """
     model_info_json = request.form.get('model_info')
     model_info = json.loads(model_info_json)
     path = f"trained_models_temp/{next(iter(model_info['data']))}"
@@ -113,6 +139,12 @@ def save_to_detection_module():
 
 @app.route('/cgnn_train_with_existing_dataset', methods=['POST'])
 def cgnn_train_with_existing_dataset():
+    """
+    Trains CGNN with an existing dataset.
+
+    Returns:
+        Response: The response from the data processing service.
+    """
     train_info_json = request.form.get('train_info')
     train_info = json.loads(train_info_json)
 
@@ -164,7 +196,7 @@ def cgnn_train_with_existing_dataset():
     train_info_json = json.dumps(train_info)
     print(train_info)
     try:
-        response = requests.post(f'{train_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_train_data',
+        response = requests.post(f'{train_info["settings"]["API_DATA_PROCESSING_URL"]}/preprocess_cgnn_train_data',
                                  files=train_files, data={'train_info': train_info_json})
         flask_response = Response(
             response.content,
@@ -192,12 +224,24 @@ def update_config():
 
 @app.route('/get_config', methods=['GET'])
 def get_config_route():
+    """
+    Retrieves the current configuration.
+
+    Returns:
+        json: The current configuration.
+    """
     config = get_config()
     return jsonify(config)
 
 
 @app.route('/get_available_datasets', methods=['GET'])
 def get_available_datasets():
+    """
+    Retrieves the available datasets.
+
+    Returns:
+        json: A dictionary of available datasets and their details.
+    """
     combined_details = {}
 
     # Iterate over each directory in the datasets path
@@ -210,31 +254,9 @@ def get_available_datasets():
                     details = json.load(file)
                     combined_details[dir_name] = details
 
-    return combined_details
+    return jsonify(combined_details)
 
 
 if __name__ == '__main__':
     set_initial_config()
     app.run(debug=True, host='0.0.0.0', port=5005)
-
-
-
-
-# @app.route('/evaluate_trained_model', methods=['POST'])
-# def evaluate_trained_model():
-#     model_config = request.form.to_dict()
-#     trained_model = request.files['model']
-#     train_array = pd.read_csv(request.files['train_array'], header=None).to_numpy(dtype=np.float32)
-#     test_array = pd.read_csv(request.files['test_array'], header=None).to_numpy(dtype=np.float32)
-#     anomaly_label_array = pd.read_csv(request.files['anomaly_label_array'], header=None).to_numpy(dtype=np.float32)
-
-#     # Read and decode the model file contents
-#     model_json = trained_model.read().decode('utf-8')
-#     model_dict = json.loads(model_json)
-#     loaded_model = OrderedDict({key: torch.tensor(value) for key, value in model_dict.items()})
-
-#     evaluation_summary, train_pred_df, test_pred_df = predict_and_evaluate(
-#         model_config, loaded_model, train_array, test_array, anomaly_label_array
-#     )
-#     print(evaluation_summary, train_pred_df, test_pred_df)
-#     return jsonify(evaluation_summary)

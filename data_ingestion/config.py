@@ -1,17 +1,27 @@
-# config.py
 import json
 
 config_file_path = "metric_config.json"
 
 
 def get_config():
+    """
+    Retrieves the current metric configuration from the configuration file.
+
+    Returns:
+        dict: The current configuration.
+    """
     with open(config_file_path, 'r') as file:
         config = json.load(file)
-
     return config
 
 
 def set_config(new_config=None):
+    """
+    Updates the metric configuration with new values and saves it to the configuration file.
+
+    Args:
+        new_config (dict, optional): New configuration values to update the existing configuration. Defaults to None.
+    """
     config = get_config()
     if new_config:
         config.update(new_config)
@@ -20,6 +30,9 @@ def set_config(new_config=None):
 
 
 def set_initial_metric_config():
+    """
+    Sets the initial metric configuration and saves it to the configuration file.
+    """
     config = {
         "cpu_usage_pods": {
             "query": 'sum(rate(container_cpu_usage_seconds_total{{pod="{pod}"}}[1m])) by (pod)',

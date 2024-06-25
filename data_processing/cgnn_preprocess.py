@@ -3,12 +3,21 @@ import pandas as pd
 import requests
 import json
 from flask import Response
-
 from ast import literal_eval
 from sklearn.preprocessing import MinMaxScaler
 
 
 def handle_cgnn_request(test_data, test_info):
+    """
+    Handles the request for CGNN anomaly detection.
+
+    Args:
+        test_data (FileStorage): The test data file uploaded by the user.
+        test_info (dict): Information about the test including settings.
+
+    Returns:
+        Response: Flask response object containing the result from the anomaly detection API.
+    """
     test_array, _, _ = load_data(test_data)
     test_data_processed = get_data(test_array, test_array.shape[1])
     test_files = {'test_array': test_data_processed}
@@ -25,6 +34,16 @@ def handle_cgnn_request(test_data, test_info):
 
 
 def handle_cgnn_train_request(cgnn_data, train_info):
+    """
+    Handles the request for CGNN training.
+
+    Args:
+        cgnn_data (dict): A dictionary containing the training, test, and anomaly label files.
+        train_info (dict): Information about the training including settings and data specifics.
+
+    Returns:
+        Response: Flask response object containing the result from the training API.
+    """
     test_array, train_array, anomaly_label_array = load_data(cgnn_data['test_array'],
                                                              cgnn_data['train_array'],
                                                              cgnn_data['anomaly_label_array'],
@@ -49,6 +68,18 @@ def handle_cgnn_train_request(cgnn_data, train_info):
 
 
 def load_data(test_data, train_data=None, anomaly_label=None, anomaly_sequence="False"):
+    """
+    Loads and processes the data files.
+
+    Args:
+        test_data (FileStorage): The test data file.
+        train_data (FileStorage, optional): The training data file. Defaults to None.
+        anomaly_label (FileStorage, optional): The anomaly label file. Defaults to None.
+        anomaly_sequence (str, optional): Indicates if the anomaly sequence is in string format. Defaults to "False".
+
+    Returns:
+        tuple: Processed test array, train array, and anomaly label array.
+    """
     test_df = pd.read_csv(test_data, header=None)
     test_array = test_df.to_numpy(dtype=np.float32)
     if train_data is not None:
@@ -73,6 +104,18 @@ def load_data(test_data, train_data=None, anomaly_label=None, anomaly_sequence="
 
 
 def get_data(test_array, data_dim, train_array=None, anomaly_label_array=None):
+    """
+    Processes and normalizes the data arrays.
+
+    Args:
+        test_array (np.ndarray): The test data array.
+        data_dim (int): The dimension of the data.
+        train_array (np.ndarray, optional): The training data array. Defaults to None.
+        anomaly_label_array (np.ndarray, optional): The anomaly label array. Defaults to None.
+
+    Returns:
+        tuple: CSV formatted strings of the processed and normalized data arrays.
+    """
     test_data = test_array.reshape((-1, data_dim))
     if train_array is not None:
         train_data = train_array.reshape((-1, data_dim))
@@ -95,6 +138,16 @@ def get_data(test_array, data_dim, train_array=None, anomaly_label_array=None):
 
 
 def normalize_data(data, scaler=None):
+    """
+    Normalizes the data using MinMaxScaler.
+
+    Args:
+        data (np.ndarray): The data array to be normalized.
+        scaler (MinMaxScaler, optional): Pre-fitted scaler to be used for normalization. Defaults to None.
+
+    Returns:
+        tuple: The normalized data array and the scaler used.
+    """
     data = np.asarray(data, dtype=np.float32)
 
     if np.any(sum(np.isnan(data))):

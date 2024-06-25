@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: crca-anomaly-detection-celery-deployment
-  namespace: CloudSentinel
+  namespace: cloudsentinel
 spec:
   replicas: 1
   selector:
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: crca-anomaly-detection-celery
-        image: myrepo/anomaly_detection/crca:latest
+        image: jojojochem/anomaly_detection_crca:latest
         command: ["celery", "-A", "tasks.celery", "worker", "--loglevel=info", "-P", "gevent"]
         env:
         - name: CELERY_BROKER_URL

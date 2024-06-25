@@ -23,19 +23,40 @@ from utils import (matrix_poly, get_triu_offdiag_indices, get_tril_offdiag_indic
                    nll_gaussian, kl_gaussian_sem, A_connect_loss, A_positive_loss)
 from modules import MLPEncoder, MLPDecoder, SEMEncoder, SEMDecoder
 from config import get_config
+
+# Set matplotlib backend to 'Agg' for non-interactive plotting
 matplotlib.use("Agg")
+
+# Ignore warnings
 warnings.filterwarnings("ignore")
 
 
 def run_crca(crca_data, crca_info, task_id, parallel=False):
+    """
+    Run the CRCA (Causal Relation Extraction) algorithm.
+
+    Args:
+    - crca_data (pd.DataFrame): Data for CRCA algorithm.
+    - crca_info (dict): Information related to CRCA.
+    - task_id (str): Identifier for the current task.
+    - parallel (bool, optional): Whether to use parallel processing. Defaults to False.
+
+    Returns:
+    - dict: Response data containing containers, metrics, ranking, and graph image.
+    """
     try:
+        # Get number of iterations from configuration
         iterations_arg = get_config()['arg_iterations']
 
+        # Perform CRCA sequentially
         results = crca_sequential(crca_data, iterations_arg)
 
+        # Concatenate results and calculate average
         df_concat = pd.concat([result[0] for result in results])
         image_base64 = [result[1] for result in results]
         cumulative_df = calculate_average(df_concat)
+
+        # Match column names and prepare response data
         name_matched_df = match_names(cumulative_df, crca_info)
         response_data = return_json_object(name_matched_df, image_base64, crca_info, task_id)
 
@@ -46,6 +67,18 @@ def run_crca(crca_data, crca_info, task_id, parallel=False):
 
 
 def return_json_object(df, image_base64, crca_info, task_id):
+    """
+    Create a JSON object from DataFrame and image base64 data.
+
+    Args:
+    - df (pd.DataFrame): DataFrame containing ranking information.
+    - image_base64 (str): Base64-encoded image data.
+    - crca_info (dict): Information related to CRCA.
+    - task_id (str): Identifier for the current task.
+
+    Saves the JSON object to a file.
+    """
+    # Prepare response data
     csv_payload = df.to_csv(index=False)
     response_data = {
         'containers': crca_info['data']['containers'],
@@ -53,20 +86,31 @@ def return_json_object(df, image_base64, crca_info, task_id):
         'ranking': csv_payload,
         'graph_image': image_base64
     }
-    path = 'results/'+task_id
+
+    # Save response data to a JSON file
+    path = 'results/' + task_id
     if not os.path.isdir(path):
         os.mkdir(path)
-    with open(path+'/crca_results.json', 'w') as f:
+    with open(path + '/crca_results.json', 'w') as f:
         json.dump(response_data, f, indent=2)
 
 
 def match_names(df_concat, crca_info):
-    df_concat['index'] = df_concat['column_nr'].astype(int)
+    """
+    Match column names based on CRCA information.
 
+    Args:
+    - df_concat (pd.DataFrame): DataFrame containing concatenated results.
+    - crca_info (dict): Information related to CRCA.
+
+    Returns:
+    - pd.DataFrame: DataFrame with matched column names.
+    """
+    # Add index column and match container and metric names
+    df_concat['index'] = df_concat['column_nr'].astype(int)
     selected_containers = crca_info['data']['containers']
     selected_metrics = crca_info['data']['metrics']
     column_names = [f"{container}_{metric}" for container in selected_containers for metric in selected_metrics]
-
     name_matched_df = df_concat.copy()
     name_matched_df['metric'] = name_matched_df['column_nr'].apply(lambda x: column_names[x])
     name_matched_df = name_matched_df[['metric', 'index', 'score']]
@@ -75,6 +119,16 @@ def match_names(df_concat, crca_info):
 
 
 def crca_sequential(data_arg, iterations_arg):
+    """
+    Perform CRCA algorithm sequentially for multiple iterations.
+
+    Args:
+    - data_arg (pd.DataFrame): Data for CRCA algorithm.
+    - iterations_arg (int): Number of iterations to run.
+
+    Returns:
+    - list: List of results from each iteration.
+    """
     try:
         results = []
         for i in range(iterations_arg):
@@ -88,11 +142,30 @@ def crca_sequential(data_arg, iterations_arg):
 
 
 def calculate_average(df):
+    """
+    Calculate the average score from the DataFrame.
+
+    Args:
+    - df (pd.DataFrame): DataFrame containing scores.
+
+    Returns:
+    - pd.DataFrame: DataFrame with average scores.
+    """
     cumulative_df = df.groupby('column_nr')['score'].mean().reset_index().sort_values(by='score', ascending=False)
     return cumulative_df
 
 
 def crca(data_arg):
+    """
+    CRCA algorithm implementation.
+
+    Args:
+    - data_arg (pd.DataFrame): Data for CRCA algorithm.
+
+    Returns:
+    - pd.DataFrame: DataFrame with sorted scores.
+    - str: Base64-encoded image data.
+    """
     try:
         config = get_config()
         gamma_arg = config['arg_gamma']

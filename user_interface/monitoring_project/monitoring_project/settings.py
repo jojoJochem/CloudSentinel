@@ -11,14 +11,22 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-import json
+# import json
+import os
 
+# # Load  settings
+# with open('monitoring_project/config.json') as config_file:
+#     dynamic_config = json.load(config_file)
+# globals().update(dynamic_config)
 
-# Load  settings
-with open('monitoring_project/config.json') as config_file:
-    dynamic_config = json.load(config_file)
-globals().update(dynamic_config)
-
+API_DATA_INGESTION_URL = os.getenv('API_DATA_INGESTION_URL', 'http://data-ingestion-service.cloudsentinel.svc.cluster.local:80')
+API_DATA_PROCESSING_URL = os.getenv('API_DATA_PROCESSING_URL', 'http://data-processing-service.cloudsentinel.svc.cluster.local:80')
+API_CRCA_ANOMALY_DETECTION_URL = os.getenv('API_CRCA_ANOMALY_DETECTION_URL', 'http://crca-anomaly-detection-service.cloudsentinel.svc.cluster.local:80')
+API_CGNN_ANOMALY_DETECTION_URL = os.getenv('API_CGNN_ANOMALY_DETECTION_URL', 'http://cgnn-anomaly-detection-service.cloudsentinel.svc.cluster.local:80')
+API_LEARNING_ADAPTATION_URL = os.getenv('API_LEARNING_ADAPTATION_URL', 'http://learning-adaptation-service.cloudsentinel.svc.cluster.local:80')
+PROMETHEUS_URL = os.getenv('PROMETHEUS_URL', 'http://prometheus-server.monitoring.svc.cluster.local:80')
+CLUSTER_NAMESPACE = os.getenv('CLUSTER_NAMESPACE', 'kube-system')
+KUBE_CONFIG_PATH = os.getenv('KUBE_CONFIG_PATH', '/Users/jochemvangaalen/.kube/config')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -55,12 +63,13 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

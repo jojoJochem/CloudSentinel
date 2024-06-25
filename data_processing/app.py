@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, request, jsonify
 import logging
 import json
@@ -7,13 +6,25 @@ import traceback
 from cgnn_preprocess import handle_cgnn_request, handle_cgnn_train_request
 from crca_preprocess import handle_crca_request
 
+# Initialize Flask app
 app = Flask(__name__)
+
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 @app.route('/preprocess_cgnn_train_data', methods=['POST'])
 def preprocess_cgnn_train_data():
+    """
+    Endpoint to preprocess CGNN training data.
+
+    Request:
+        POST: Contains form-data with files and training info.
+
+    Returns:
+        Response: JSON response from handle_cgnn_train_request or an error message.
+    """
     try:
         train_data = request.files
         train_info_json = request.form.get('train_info')
@@ -27,6 +38,15 @@ def preprocess_cgnn_train_data():
 
 @app.route('/preprocess_cgnn_data', methods=['POST'])
 def preprocess_cgnn_data():
+    """
+    Endpoint to preprocess CGNN test data.
+
+    Request:
+        POST: Contains form-data with a test file and test info.
+
+    Returns:
+        Response: JSON response from handle_cgnn_request or an error message.
+    """
     try:
         test_data = request.files['test_array']
         test_info_json = request.form.get('test_info')
@@ -40,6 +60,15 @@ def preprocess_cgnn_data():
 
 @app.route('/preprocess_crca_data', methods=['POST'])
 def preprocess_crca_data():
+    """
+    Endpoint to preprocess CRCA data.
+
+    Request:
+        POST: Contains form-data with a CRCA file and CRCA info.
+
+    Returns:
+        Response: JSON response from handle_crca_request or an error message.
+    """
     try:
         crca_file = request.files['crca_file']
         crca_info_json = request.form.get('crca_info')

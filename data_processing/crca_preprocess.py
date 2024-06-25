@@ -4,8 +4,17 @@ import requests
 import json
 from flask import Response
 
-
 def handle_crca_request(crca_file, crca_info):
+    """
+    Handles the request for CRCA anomaly detection.
+
+    Args:
+        crca_file (FileStorage): The CRCA data file uploaded by the user.
+        crca_info (dict): Information about the CRCA including settings.
+
+    Returns:
+        Response: Flask response object containing the result from the CRCA anomaly detection API.
+    """
     crca_file_processed = normalize_data(crca_file)
     crca_info_json = json.dumps(crca_info)
     response = requests.post(f"{crca_info['settings']['API_CRCA_ANOMALY_DETECTION_URL']}/crca",
@@ -19,15 +28,17 @@ def handle_crca_request(crca_file, crca_info):
 
     return flask_response
 
-
 def normalize_data(csv):
+    """
+    Normalizes the data in the CSV file using MinMaxScaler.
+
+    Args:
+        csv (FileStorage): The CSV file containing the data to be normalized.
+
+    Returns:
+        str: A CSV formatted string of the normalized data.
+    """
     df = pd.read_csv(csv, header=None)
     scaler = MinMaxScaler()
     df_normalized = scaler.fit_transform(df)
     return pd.DataFrame(df_normalized).to_csv(index=False, header=False)
-
-    # df = pd.read_csv(csv)
-    # scaler = MinMaxScaler()
-    # feature_columns = [col for col in df.columns if col != 'timestamp']
-    # df[feature_columns] = scaler.fit_transform(df[feature_columns])
-    # return df.to_csv(index=False)

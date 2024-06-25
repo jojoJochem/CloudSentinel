@@ -2,7 +2,7 @@
 FROM python:3.12-slim
 
 # Set environment variables
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 # Set the working directory
 WORKDIR /app
@@ -19,6 +19,9 @@ COPY . /app/
 
 # Collect static files
 RUN python manage.py collectstatic --noinput
+
+# Expose the desired port
+EXPOSE 8000
 
 # Define the command to run the application
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "monitoring_project.wsgi:application"]

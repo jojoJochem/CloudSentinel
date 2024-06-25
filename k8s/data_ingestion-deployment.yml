@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: data-ingestion-deployment
-  namespace: CloudSentinel
+  namespace: cloudsentinel
 spec:
   replicas: 1
   selector:
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: data-ingestion
-        image: myrepo/data_ingestion:latest
+        image: jojojochem/data_ingestion:latest
         ports:
         - containerPort: 5001
         env:
@@ -35,7 +35,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: data-ingestion-service
-  namespace: CloudSentinel
+  namespace: cloudsentinel
 spec:
   selector:
     app: data-ingestion

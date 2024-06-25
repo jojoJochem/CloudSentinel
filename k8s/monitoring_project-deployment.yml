@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-project-deployment
+  namespace: cloudsentinel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: monitoring-project
+  template:
+    metadata:
+      labels:
+        app: monitoring-project
+    spec:
+      containers:
+      - name: monitoring-project
+        image: jojojochem/monitoring_project:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: API_DATA_INGESTION_URL
+          value: "http://data-ingestion-service.cloudsentinel.svc.cluster.local:80"
+        - name: API_DATA_PROCESSING_URL
+          value: "http://data-processing-service.cloudsentinel.svc.cluster.local:80"
+        - name: API_CRCA_ANOMALY_DETECTION_URL
+          value: "http://crca-anomaly-detection-service.cloudsentinel.svc.cluster.local:80"
+        - name: API_CGNN_ANOMALY_DETECTION_URL
+          value: "http://cgnn-anomaly-detection-service.cloudsentinel.svc.cluster.local:80"
+        - name: API_LEARNING_ADAPTATION_URL
+          value: "http://learning-adaptation-service.cloudsentinel.svc.cluster.local:80"
+        - name: PROMETHEUS_URL
+          value: "http://prometheus-server.monitoring.svc.cluster.local:80"
+        - name: CLUSTER_NAMESPACE
+          value: kube-system
+        - name: KUBE_CONFIG_PATH
+          value:
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "512Mi"
+            cpu: "1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: monitoring-project-service
+  namespace: cloudsentinel
+spec:
+  selector:
+    app: monitoring-project
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
+  

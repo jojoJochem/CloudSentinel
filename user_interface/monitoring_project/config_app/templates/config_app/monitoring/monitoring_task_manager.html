@@ -30,17 +30,24 @@
     });
 
     async function fetchActiveTasks() {
-        const response = await fetch(`${dataIngestionUrl}/get_active_tasks`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
+        try {
+            console.log(`Fetching active tasks from ${dataIngestionUrl}/get_active_tasks`);
+            const response = await fetch(`${dataIngestionUrl}/get_active_tasks`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            const data = await response.json();
+            console.log('Active tasks:', data);
+            activeTasks = data;
+            populateActiveTasksList();
+        } catch (error) {
+            console.error('Failed to fetch active tasks:', error);
         }
-        activeTasks = await response.json();
-        populateActiveTasksList();
     }
 
     function populateActiveTasksList() {
@@ -85,17 +92,23 @@
     }
 
     async function fetchResults() {
-        const response = await fetch(`${cgnnUrl}/get_all_results`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
+        try {
+            console.log(`Fetching results from ${cgnnUrl}/get_all_results`);
+            const response = await fetch(`${cgnnUrl}/get_all_results`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            const data = await response.json();
+            console.log('Results:', data);
+            populateResultsList(data);
+        } catch (error) {
+            console.error('Failed to fetch results:', error);
         }
-        const results = await response.json();
-        populateResultsList(results);
     }
 
     function formatStartTime(startTime) {

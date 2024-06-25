@@ -9,15 +9,43 @@ from .utils import get_config, get_settings, get_metrics
 
 
 def train_algorithms(request):
+    """
+    Renders the home page for training algorithms.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: The rendered training algorithms home page.
+    """
     return render(request, 'config_app/training/train_algorithms_home.html')
 
 
 def train_cgnn(request):
+    """
+    Renders the CGNN training home page with configuration data.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: The rendered CGNN training home page with config data.
+    """
     config_data = get_config(settings.API_LEARNING_ADAPTATION_URL)
     return render(request, 'config_app/training/cgnn_train_home.html', {'config': config_data})
 
 
 def cgnn_train_data(request):
+    """
+    Handles CGNN training data submission and renders the waiting page.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: The rendered page to submit CGNN training data.
+        HttpResponseRedirect: Redirects to the CGNN training data page on failure.
+    """
     if request.method == 'POST':
         selected_dataset = request.POST.get('dataset')
         selected_containers = request.POST.getlist('containers')
@@ -38,6 +66,7 @@ def cgnn_train_data(request):
         try:
             response = requests.post(settings.API_LEARNING_ADAPTATION_URL + '/cgnn_train_with_existing_dataset',
                                      data={'train_info': train_info_json})
+            response.raise_for_status()
             response_data = response.json()
             task_id = response_data.get('task_id')
             return render(request, 'config_app/waiting_page.html', {'task_id': task_id,
@@ -47,17 +76,21 @@ def cgnn_train_data(request):
             messages.error(request, f'Failed to train CGNN: {str(e)}')
             return redirect('cgnn_train_data')
 
-    response = requests.get(settings.API_LEARNING_ADAPTATION_URL + '/get_available_datasets')
-    details = response.json()
-
     datasets = []
-    for key, value in details.items():
-        datasets.append({
-            'name': key,
-            'data': value
-        })
 
-    datasets_json = json.dumps(datasets)
+    try:
+        response = requests.get(settings.API_LEARNING_ADAPTATION_URL + '/get_available_datasets')
+        response.raise_for_status()
+        details = response.json()
+        for key, value in details.items():
+            datasets.append({
+                'name': key,
+                'data': value
+            })
+        datasets_json = json.dumps(datasets)
+    except RequestException as e:
+        messages.error(request, f'Failed to get available datasets: {str(e)}')
+        datasets_json = json.dumps(datasets)
 
     return render(request, 'config_app/training/cgnn_train_data.html', {
         'datasets': datasets,
@@ -66,6 +99,16 @@ def cgnn_train_data(request):
 
 
 def upload_cgnn_train_data(request):
+    """
+    Handles the upload of CGNN training data and initiates the training process.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: The rendered waiting page with task details.
+        HttpResponseRedirect: Redirects to the CGNN training page on failure.
+    """
     if request.method == 'POST':
         train_array = request.FILES['train_array']
         test_array = request.FILES['test_array']
@@ -100,6 +143,7 @@ def upload_cgnn_train_data(request):
         try:
             response = requests.post(f'{settings.API_DATA_PROCESSING_URL}/preprocess_cgnn_train_data',
                                      files=train_files, data={'train_info': train_info_json})
+            response.raise_for_status()
             response_data = response.json()
             task_id = response_data.get('task_id')
             return render(request, 'config_app/waiting_page.html', {'task_id': task_id,

@@ -11,20 +11,56 @@ from .utils import get_config, get_pods, get_available_models, get_settings, get
 
 
 def home_anomaly_detection(request):
+    """
+    Renders the home page for anomaly detection.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: The rendered home anomaly detection page.
+    """
     return render(request, 'config_app/anomaly_detection/home_anomaly_detection.html')
 
 
 def perform_anomaly_detection_cgnn(request):
+    """
+    Fetches and renders the CGNN anomaly detection configuration.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: The rendered CGNN anomaly detection configuration page.
+    """
     config_data = get_config(settings.API_CGNN_ANOMALY_DETECTION_URL)
     return render(request, 'config_app/anomaly_detection/cgnn/cgnn_anomaly_detection_home.html', {'config': config_data})
 
 
 def perform_anomaly_detection_crca(request):
+    """
+    Fetches and renders the CRCA anomaly detection configuration.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: The rendered CRCA anomaly detection configuration page.
+    """
     config_data = get_config(settings.API_CRCA_ANOMALY_DETECTION_URL)
     return render(request, 'config_app/anomaly_detection/crca/crca_anomaly_detection_home.html', {'config': config_data})
 
 
 def select_crca_file(request):
+    """
+    Retrieves pod names and renders the CRCA file selection page.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: The rendered CRCA file selection page with pod names.
+    """
     pod_names_url = get_pods(settings.CLUSTER_NAMESPACE)
     try:
         response = requests.get(pod_names_url)
@@ -37,6 +73,16 @@ def select_crca_file(request):
 
 
 def chosen_crca(request):
+    """
+    Processes selected CRCA data and renders the response.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: The rendered CRCA response page with results.
+        HttpResponseRedirect: Redirects to the file selection page on failure.
+    """
     if request.method == 'POST':
         selected_pod_names = request.POST.getlist('selected_pod_names')
         start_datetime = request.POST.get('start_datetime')
@@ -66,11 +112,18 @@ def chosen_crca(request):
 
 
 def upload_cgnn_data(request):
-    models = {}
+    """
+    Handles the upload of CGNN data and performs anomaly detection.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: The rendered page to upload CGNN data with results.
+    """
+    models = get_available_models(settings.API_CGNN_ANOMALY_DETECTION_URL)
     selected_model = None
     result = None
-
-    models = get_available_models(settings.API_CGNN_ANOMALY_DETECTION_URL)
 
     if request.method == 'POST':
         selected_model = request.POST.get('selected_model')
@@ -98,6 +151,16 @@ def upload_cgnn_data(request):
 
 
 def upload_crca_data(request):
+    """
+    Handles the upload of CRCA data and initiates the processing.
+
+    Args:
+        request (HttpRequest): The request object.
+
+    Returns:
+        HttpResponse: The rendered waiting page with task details.
+        HttpResponseRedirect: Redirects to the home page on failure.
+    """
     if request.method == 'POST':
         crca_file = request.FILES['crca_file']
         metrics = json.loads(request.POST.get('selected_metrics', '[]'))

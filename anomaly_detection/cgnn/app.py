@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, request, jsonify
 import logging
 import torch
@@ -26,7 +25,30 @@ logger = logging.getLogger(__name__)
 @app.route('/detect_anomalies', methods=['POST'])
 def detect_anomalies():
     """
-    Detect anomalies in the given data.
+    Endpoint to detect anomalies in the given data.
+
+    Expects:
+    - A CSV file containing the test data as 'test_array' in form-data.
+    - JSON data 'test_info' in form-data containing:
+      - 'data': {
+          'model': <model_name>,
+          'crca_threshold': <threshold_value>,
+          'iteration': <iteration_number>,
+          'start_time': <start_time>,
+          'end_time': <end_time>,
+          'crca_pods': <list_of_pods_for_crca>,
+          'metrics': <list_of_metrics>,
+          'data_interval': <interval_between_data_points>
+        },
+      - 'task_id': <task_id>
+
+    Saves results to 'results/<task_id>/cgnn_results.json'.
+
+    If anomaly_result > crca_threshold, triggers '/anomaly_rca' endpoint.
+
+    Returns:
+    - "success" if successful.
+    - Error message and status code 500 if an error occurs.
     """
     try:
         test_data = pd.read_csv(request.files['test_array'], header=None).to_numpy(dtype=np.float32)
@@ -38,7 +60,7 @@ def detect_anomalies():
         iteration = test_info['data']['iteration']
         task_id = test_info['task_id']
 
-        path = 'results/'+task_id
+        path = 'results/' + task_id
         if not os.path.isdir(path):
             os.mkdir(path)
 
@@ -98,6 +120,29 @@ def detect_anomalies():
 
 @app.route('/save_model', methods=['POST'])
 def save_model():
+    """
+    Endpoint to save a trained model and its related information.
+
+    Expects:
+    - The model file as 'model' in form-data.
+    - JSON data 'model_info' in form-data containing:
+      - 'data': {
+          <model_name>: {
+              'model_params': <model_parameters>,
+              'model_config': <model_configuration>,
+              'model_evaluation': <model_evaluation>
+          }
+        }
+
+    Saves model to 'trained_models/<model_name>/model.pt' and related information
+    to 'trained_models/<model_name>/model_params.json',
+    'trained_models/<model_name>/model_config.json',
+    'trained_models/<model_name>/model_evaluation.json'.
+
+    Returns:
+    - "success" if successful.
+    - Error message and status code 500 if an error occurs.
+    """
     try:
         trained_model = request.files['model']
         model_info_json = request.form.get('model_info')
@@ -107,7 +152,8 @@ def save_model():
         model_path = 'trained_models/' + model
 
         if not os.path.isdir(model_path):
-            os.mkdirs(model_path)
+            os.makedirs(model_path)
+
         model_json = trained_model.read().decode('utf-8')
         model_dict = json.loads(model_json)
         loaded_model = OrderedDict({key: torch.tensor(value) for key, value in model_dict.items()})
@@ -127,6 +173,13 @@ def save_model():
 
 @app.route('/get_config', methods=['GET'])
 def get_config_route():
+    """
+    Endpoint to get the current configuration settings.
+
+    Returns:
+    - JSON object containing the current configuration.
+    - Error message and status code 500 if an error occurs.
+    """
     try:
         config = get_config()
         return jsonify(config), 200
@@ -137,11 +190,17 @@ def get_config_route():
 @app.route('/update_config', methods=['POST'])
 def update_config():
     """
-    Updates the configuration for the monitoring application.
+    Endpoint to update the configuration settings.
+
+    Expects:
+    - JSON data containing the updated configuration.
+
+    Returns:
+    - "success" if successful.
+    - Error message and status code 500 if an error occurs.
     """
     new_config = request.json
     try:
-        # Assuming set_config is a function that updates your configurations
         set_config(new_config)
         return jsonify({"success"}), 200
     except Exception as e:
@@ -150,6 +209,13 @@ def update_config():
 
 @app.route('/get_available_models', methods=['GET'])
 def get_available_models():
+    """
+    Endpoint to get information about available trained models.
+
+    Returns:
+    - JSON object containing information about each trained model.
+    - Error message and status code 500 if an error occurs.
+    """
     try:
         model_dir = 'trained_models/'
         models = {}
@@ -171,6 +237,16 @@ def get_available_models():
 
 @app.route('/get_results', methods=['POST'])
 def get_results():
+    """
+    Endpoint to get results for a specific task ID.
+
+    Expects:
+    - JSON data containing 'task_id' for which results are requested.
+
+    Returns:
+    - JSON object containing results for the specified task ID.
+    - Error message and status code 500 if an error occurs.
+    """
     try:
         task_id = request.json['task_id']
         with open('results/'+task_id+'/cgnn_results.json', 'r') as f:
@@ -182,6 +258,13 @@ def get_results():
 
 @app.route('/get_all_results', methods=['GET'])
 def get_all_results():
+    """
+    Endpoint to get results for all tasks.
+
+    Returns:
+    - JSON object containing results for all tasks.
+    - Error message and status code 500 if an error occurs.
+    """
     try:
         task_ids = os.listdir('results/')
         results = {}
@@ -199,13 +282,22 @@ def get_all_results():
 
 @app.route('/delete_results', methods=['POST'])
 def delete_results():
+    """
+    Endpoint to delete results for a specific task ID.
+
+    Expects:
+    - JSON data containing 'taskId' and 'crcaLink' for which results are to be deleted.
+
+    Returns:
+    - JSON object indicating success.
+    - Error message and status code 500 if an error occurs.
+    """
     try:
         data = request.get_json()
         task_id = data['taskId']
         crca_link = data['crcaLink']
         with open('results/'+task_id+'/cgnn_results.json', 'r') as f:
             data = json.load(f)
-        print(data['results'], task_id, crca_link)
         for key, result in data['results'].items():
             if 'crca_task_id' in result:
                 requests.delete(f"{crca_link}/delete_results/{result['crca_task_id']}")
