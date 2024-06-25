@@ -22,20 +22,28 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
     - name: Build and push Docker images
-      run: |
-        docker build -t jojojochem/data_ingestion:latest -f data_ingestion/Dockerfile data_ingestion/
-        docker build -t jojojochem/data_processing:latest -f data_processing/Dockerfile data_processing/
-        docker build -t jojojochem/anomaly_detection_cgnn:latest -f anomaly_detection/cgnn/Dockerfile anomaly_detection/cgnn/
-        docker build -t jojojochem/anomaly_detection_crca:latest -f anomaly_detection/crca/Dockerfile anomaly_detection/crca/
-        docker build -t jojojochem/learning_adaptation:latest -f learning_adaptation/Dockerfile learning_adaptation/
-        docker build -t jojojochem/monitoring_project:latest -f user_interface/monitoring_project/Dockerfile user_interface/monitoring_project/
-        docker push jojojochem/data_ingestion:latest
-        docker push jojojochem/data_processing:latest
-        docker push jojojochem/anomaly_detection_cgnn:latest
-        docker push jojojochem/anomaly_detection_crca:latest
-        docker push jojojochem/learning_adaptation:latest
-        docker push jojojochem/monitoring_project:latest
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: |
+          jojojochem/data_ingestion:latest
+          jojojochem/data_processing:latest
+          jojojochem/anomaly_detection_cgnn:latest
+          jojojochem/anomaly_detection_crca:latest
+          jojojochem/learning_adaptation:latest
+          jojojochem/monitoring_project:latest
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
 
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v0
