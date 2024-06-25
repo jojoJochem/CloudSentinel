@@ -46,7 +46,7 @@ jobs:
 
     - name: Configure kubectl
       run: |
-        gcloud container clusters get-credentials cscluster --zone us-central1-a --project cloudsentinelproject
+        gcloud container clusters get-credentials cscluster --zone us-central1-a --project cloudsentinel-427513
 
     - name: Deploy to Kubernetes
       run: |
