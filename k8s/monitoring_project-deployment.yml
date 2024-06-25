@@ -33,15 +33,6 @@ spec:
           value: "http://prometheus-server.monitoring.svc.cluster.local:80"
         - name: CLUSTER_NAMESPACE
           value: kube-system
-        - name: KUBE_CONFIG_PATH
-          value:
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "500m"
-          limits:
-            memory: "512Mi"
-            cpu: "1"
 ---
 apiVersion: v1
 kind: Service
@@ -56,4 +47,3 @@ spec:
       port: 80
       targetPort: 8000
   type: LoadBalancer
-  

@@ -22,10 +22,4 @@ spec:
           value: "redis://redis:6379/1"
         - name: CELERY_RESULT_BACKEND
           value: "redis://redis:6379/1"
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "250m"
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
+
