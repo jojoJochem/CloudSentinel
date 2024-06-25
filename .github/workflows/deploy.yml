@@ -29,7 +29,7 @@ jobs:
         key: ${{ runner.os }}-buildx-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-buildx-
-
+ 
     - name: Build and push Docker images
       uses: docker/build-push-action@v2
       with:
@@ -44,6 +44,7 @@ jobs:
           jojojochem/monitoring_project:latest
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
+
 
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v0
