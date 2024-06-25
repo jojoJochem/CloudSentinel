@@ -48,6 +48,15 @@ jobs:
       run: |
         gcloud container clusters get-credentials cscluster --zone us-central1-a --project cloudsentinel-427513
 
+    - name: Install gke-gcloud-auth-plugin
+      run: |
+        sudo apt-get update
+        sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin
+
+    - name: Configure kubectl
+      run: |
+        gcloud container clusters get-credentials cscluster --zone us-central1-a --project cloudsentinelproject
+
     - name: Deploy to Kubernetes
       run: |
         kubectl apply -f k8s/namespace-deployment.yml
