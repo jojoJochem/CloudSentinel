@@ -46,7 +46,7 @@ jobs:
 
     - name: Configure kubectl
       run: |
-        gcloud container clusters get-credentials YOUR_CLUSTER_NAME --zone YOUR_CLUSTER_ZONE
+        gcloud container clusters get-credentials cscluster --zone us-central1-a
 
     - name: Deploy to Kubernetes
       run: |
