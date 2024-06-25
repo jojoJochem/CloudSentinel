@@ -22,20 +22,20 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build and push Docker images
-      run: |
-        docker build -t jojojochem/data_ingestion:latest -f data_ingestion/Dockerfile data_ingestion/
-        docker build -t jojojochem/data_processing:latest -f data_processing/Dockerfile data_processing/
-        docker build -t jojojochem/anomaly_detection_cgnn:latest -f anomaly_detection/cgnn/Dockerfile anomaly_detection/cgnn/
-        docker build -t jojojochem/anomaly_detection_crca:latest -f anomaly_detection/crca/Dockerfile anomaly_detection/crca/
-        docker build -t jojojochem/learning_adaptation:latest -f learning_adaptation/Dockerfile learning_adaptation/
-        docker build -t jojojochem/monitoring_project:latest -f user_interface/monitoring_project/Dockerfile user_interface/monitoring_project/
-        docker push jojojochem/data_ingestion:latest
-        docker push jojojochem/data_processing:latest
-        docker push jojojochem/anomaly_detection_cgnn:latest
-        docker push jojojochem/anomaly_detection_crca:latest
-        docker push jojojochem/learning_adaptation:latest
-        docker push jojojochem/monitoring_project:latest
+    # - name: Build and push Docker images
+    #   run: |
+    #     docker build -t jojojochem/data_ingestion:latest -f data_ingestion/Dockerfile data_ingestion/
+    #     docker build -t jojojochem/data_processing:latest -f data_processing/Dockerfile data_processing/
+    #     docker build -t jojojochem/anomaly_detection_cgnn:latest -f anomaly_detection/cgnn/Dockerfile anomaly_detection/cgnn/
+    #     docker build -t jojojochem/anomaly_detection_crca:latest -f anomaly_detection/crca/Dockerfile anomaly_detection/crca/
+    #     docker build -t jojojochem/learning_adaptation:latest -f learning_adaptation/Dockerfile learning_adaptation/
+    #     docker build -t jojojochem/monitoring_project:latest -f user_interface/monitoring_project/Dockerfile user_interface/monitoring_project/
+    #     docker push jojojochem/data_ingestion:latest
+    #     docker push jojojochem/data_processing:latest
+    #     docker push jojojochem/anomaly_detection_cgnn:latest
+    #     docker push jojojochem/anomaly_detection_crca:latest
+    #     docker push jojojochem/learning_adaptation:latest
+    #     docker push jojojochem/monitoring_project:latest
 
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v0
@@ -46,7 +46,7 @@ jobs:
 
     - name: Configure kubectl
       run: |
-        gcloud container clusters get-credentials cscluster --zone us-central1-a
+        gcloud container clusters get-credentials cscluster --zone us-central1-a --project cloudsentinelproject
 
     - name: Deploy to Kubernetes
       run: |
