@@ -70,7 +70,3 @@ def set_config(new_config=None):
         json.dump(config, file)
 
 
-if __name__ == '__main__':
-    set_config({
-        "dataset": "hoi"
-    })
