@@ -46,25 +46,30 @@ def monitoring_task(self, monitor_info):
     test_info['task_id'] = self.request.id
 
     while True:
-        # Check for task revocation by querying the backend
-        task = monitoring_task.AsyncResult(self.request.id)
-        if task.state == 'REVOKED':
-            break
+        try:
+            # Check for task revocation by querying the backend
+            task = monitoring_task.AsyncResult(self.request.id)
+            if task.state == 'REVOKED':
+                logger.info(f"Task {self.request.id} revoked")
+                break
 
-        end_time = int(time.time())
-        start_time = end_time - (test_info['data']['duration'] * 60)
-        dataframe = fetch_metrics(test_info['data']['pods'], test_info['data']['metrics'], start_time, end_time,
-                                  test_info['settings']['PROMETHEUS_URL'], test_info['data']['data_interval'])
-        test_files = {'test_array': dataframe.to_csv(header=False, index=False)}
-        test_info['data']['start_time'] = start_time
-        test_info['data']['end_time'] = end_time
-        test_info['data']['iteration'] = iteration
-        test_info_json = json.dumps(test_info)
-        print(test_info_json)
-        requests.post(f"{test_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_data",
-                      files=test_files, data={'test_info': test_info_json})
-        time.sleep(test_info['data']['test_interval'] * 60)
-        iteration += 1
+            end_time = int(time.time())
+            start_time = end_time - (test_info['data']['duration'] * 60)
+            dataframe = fetch_metrics(test_info['data']['pods'], test_info['data']['metrics'], start_time, end_time,
+                                      test_info['settings']['PROMETHEUS_URL'], test_info['data']['data_interval'])
+            test_files = {'test_array': dataframe.to_csv(header=False, index=False)}
+            test_info['data']['start_time'] = start_time
+            test_info['data']['end_time'] = end_time
+            test_info['data']['iteration'] = iteration
+            test_info_json = json.dumps(test_info)
+            logger.info(f"Sending data for task {self.request.id}, iteration {iteration}")
+            requests.post(f"{test_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_data",
+                          files=test_files, data={'test_info': test_info_json})
+            time.sleep(test_info['data']['test_interval'] * 60)
+            iteration += 1
+        except Exception as e:
+            logger.error(f"Error in monitoring task {self.request.id}: {str(e)}")
+            break
 
 
 @app.route('/start_monitoring', methods=['POST'])
@@ -75,11 +80,15 @@ def start_monitoring():
     Returns:
         Response: JSON response with the status and task ID.
     """
-    monitor_info_json = request.form.get('monitor_info')
-    monitor_info = json.loads(monitor_info_json)
-    task = monitoring_task.apply_async(args=[monitor_info])
-    logging.info(f"Task {task.id} started")
-    return jsonify({'status': 'monitoring_started', 'task_id': task.id}), 200
+    try:
+        monitor_info_json = request.form.get('monitor_info')
+        monitor_info = json.loads(monitor_info_json)
+        task = monitoring_task.apply_async(args=[monitor_info])
+        logger.info(f"Task {task.id} started")
+        return jsonify({'status': 'monitoring_started', 'task_id': task.id}), 200
+    except Exception as e:
+        logger.error(f"Error starting monitoring task: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 @app.route('/get_active_tasks', methods=['GET'])
@@ -90,8 +99,13 @@ def get_tasks():
     Returns:
         Response: JSON response containing the active tasks.
     """
-    active_tasks = celery.control.inspect().active()
-    return jsonify(active_tasks), 200
+    try:
+        active_tasks = celery.control.inspect().active()
+        logger.info("Retrieved active tasks")
+        return jsonify(active_tasks), 200
+    except Exception as e:
+        logger.error(f"Error retrieving active tasks: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 @app.route('/stop_monitoring/<task_id>', methods=['DELETE'])
@@ -105,11 +119,17 @@ def stop_monitoring(task_id):
     Returns:
         Response: JSON response with the status of the operation.
     """
-    if task_id:
-        celery.control.revoke(task_id, terminate=True)
-        return jsonify({'status': f'monitoring_stopped for task_id {task_id}'}), 200
-    else:
-        return jsonify({'status': 'task_id_missing'}), 400
+    try:
+        if task_id:
+            celery.control.revoke(task_id, terminate=True)
+            logger.info(f"Task {task_id} stopped")
+            return jsonify({'status': f'monitoring_stopped for task_id {task_id}'}), 200
+        else:
+            logger.warning("Task ID is missing")
+            return jsonify({'status': 'task_id_missing'}), 400
+    except Exception as e:
+        logger.error(f"Error stopping task {task_id}: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 @app.route('/anomaly_rca', methods=['POST'])
@@ -124,9 +144,10 @@ def anomaly_rca():
         data = request.form.get('crca_data')
         data = json.loads(data)
         response = collect_crca_data(data)
+        logger.info("Anomaly RCA completed")
         return response
     except Exception as e:
-        logger.error(traceback.format_exc())
+        logger.error(f"Error performing anomaly RCA: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -143,8 +164,10 @@ def get_pod_names():
         v1 = client.CoreV1Api()
         ret = v1.list_namespaced_pod(namespace, watch=False)
         pod_names = [item.metadata.name for item in ret.items]
+        logger.info(f"Retrieved pod names for namespace {namespace}")
         return jsonify(pod_names), 200
     except Exception as e:
+        logger.error(f"Error retrieving pod names: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -157,20 +180,20 @@ def load_config():
         Response: JSON response with the status of the operation.
     """
     try:
-        # config.load_kube_config(request.json['kube_config_path'])
         config.load_incluster_config()
+        logger.info("Kubernetes configuration loaded successfully")
         return jsonify({"message": "Kubernetes configuration loaded successfully."}), 200
     except FileNotFoundError as e:
-        logging.error("Kubernetes configuration file not found: %s", str(e))
+        logger.error(f"Kubernetes configuration file not found: {str(e)}")
         return jsonify({"error": "Kubernetes configuration file not found"}), 400
     except config.ConfigException as e:
-        logging.error("Error loading Kubernetes configuration: %s", str(e))
+        logger.error(f"Error loading Kubernetes configuration: {str(e)}")
         return jsonify({"error": "Invalid Kubernetes configuration"}), 400
     except ConnectionError as e:
-        logging.error("Could not connect to Kubernetes cluster: %s", str(e))
+        logger.error(f"Could not connect to Kubernetes cluster: {str(e)}")
         return jsonify({"error": "Could not connect to Kubernetes cluster"}), 503
     except Exception as e:
-        logging.error("Unexpected error: %s", str(e))
+        logger.error(f"Unexpected error: {str(e)}")
         return jsonify({"error": "Internal Server Error"}), 500
 
 
@@ -184,8 +207,10 @@ def get_config_route():
     """
     try:
         config = get_config()
+        logger.info("Metrics configuration retrieved")
         return jsonify(config), 200
     except Exception as e:
+        logger.error(f"Error retrieving metrics configuration: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -200,11 +225,14 @@ def update_config():
     new_config = request.json
     try:
         set_config(new_config)
+        logger.info("Configuration updated successfully")
         return jsonify("success"), 200
     except Exception as e:
+        logger.error(f"Error updating configuration: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
     set_initial_metric_config()
+    logger.info("Starting Flask app")
     app.run(debug=True, host='0.0.0.0', port=5001)

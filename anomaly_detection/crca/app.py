@@ -19,7 +19,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all routes
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Configure Celery
@@ -47,7 +47,7 @@ def crca():
     - Error response if an exception occurs.
     """
     try:
-        logging.info("Received request: %s", request)
+        logger.info("Received request to initiate CRCA task")
         crca_file = request.files['crca_file']
         crca_data = pd.read_csv(crca_file, header=None)
         crca_data_json = crca_data.to_json(orient='split')
@@ -56,11 +56,12 @@ def crca():
 
         # Initiate CRCA task asynchronously
         task = run_crca_task.apply_async(args=[crca_data_json, crca_info])
+        logger.info(f"CRCA task initiated with task_id: {task.id}")
 
         return jsonify({"task_id": task.id}), 202
 
     except Exception as e:
-        logger.error(traceback.format_exc())
+        logger.error(f"Error initiating CRCA task: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -77,6 +78,7 @@ def get_status(task_id):
     - Error response if the task_id does not exist or an exception occurs.
     """
     try:
+        logger.info(f"Received request to get status for task_id: {task_id}")
         task = run_crca_task.AsyncResult(task_id)
 
         if task.state == 'PENDING':
@@ -94,10 +96,12 @@ def get_status(task_id):
                 'state': task.state,
                 'status': str(task.info)
             }
+        logger.info(f"Status for task_id {task_id}: {response}")
 
         return jsonify(response), 200
 
     except Exception as e:
+        logger.error(f"Error retrieving status for task_id {task_id}: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -114,11 +118,14 @@ def get_results(task_id):
     - Error response if the task_id does not exist or an exception occurs.
     """
     try:
+        logger.info(f"Received request to get results for task_id: {task_id}")
         with open('results/'+task_id+'/crca_results.json', 'r') as f:
             data = json.load(f)
+        logger.info(f"Results retrieved for task_id: {task_id}")
         return jsonify(data), 200
 
     except Exception as e:
+        logger.error(f"Error retrieving results for task_id {task_id}: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -135,10 +142,13 @@ def delete_results(task_id):
     - Error response if the task_id does not exist or an exception occurs.
     """
     try:
+        logger.info(f"Received request to delete results for task_id: {task_id}")
         shutil.rmtree('results/'+task_id)  # Delete directory recursively
+        logger.info(f"Results deleted for task_id: {task_id}")
         return jsonify({"success": True}), 200
 
     except Exception as e:
+        logger.error(f"Error deleting results for task_id {task_id}: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -152,10 +162,13 @@ def get_config_route():
     - Error response if an exception occurs while retrieving the configuration.
     """
     try:
+        logger.info("Received request to get configuration")
         config = get_config()
+        logger.info("Configuration retrieved successfully")
         return jsonify(config), 200
 
     except Exception as e:
+        logger.error(f"Error retrieving configuration: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -173,13 +186,18 @@ def update_config():
     """
     new_config = request.json
     try:
+        logger.info("Received request to update configuration")
         set_config(new_config)
+        logger.info("Configuration updated successfully")
         return jsonify({"status": "success", "message": "Configuration updated successfully"}), 200
 
     except Exception as e:
+        logger.error(f"Error updating configuration: {traceback.format_exc()}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
 if __name__ == '__main__':
+    logger.info("Initializing configuration")
     set_initial_config()
+    logger.info("Starting Flask app")
     app.run(debug=True, host='0.0.0.0', port=5023)

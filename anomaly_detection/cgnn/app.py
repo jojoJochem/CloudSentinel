@@ -26,31 +26,9 @@ logger = logging.getLogger(__name__)
 def detect_anomalies():
     """
     Endpoint to detect anomalies in the given data.
-
-    Expects:
-    - A CSV file containing the test data as 'test_array' in form-data.
-    - JSON data 'test_info' in form-data containing:
-      - 'data': {
-          'model': <model_name>,
-          'crca_threshold': <threshold_value>,
-          'iteration': <iteration_number>,
-          'start_time': <start_time>,
-          'end_time': <end_time>,
-          'crca_pods': <list_of_pods_for_crca>,
-          'metrics': <list_of_metrics>,
-          'data_interval': <interval_between_data_points>
-        },
-      - 'task_id': <task_id>
-
-    Saves results to 'results/<task_id>/cgnn_results.json'.
-
-    If anomaly_result > crca_threshold, triggers '/anomaly_rca' endpoint.
-
-    Returns:
-    - "success" if successful.
-    - Error message and status code 500 if an error occurs.
     """
     try:
+        logger.info("Starting anomaly detection")
         test_data = pd.read_csv(request.files['test_array'], header=None).to_numpy(dtype=np.float32)
         test_info_json = request.form.get('test_info')
         test_info = json.loads(test_info_json)
@@ -73,18 +51,19 @@ def detect_anomalies():
                 'percentage': anomaly_result
             }
         else:
-            data = {}
-            data['model'] = model
-            data['start_time'] = test_info['data']['start_time']
-            data['containers'] = test_info['data']['containers']
-            data['metrics'] = test_info['data']['metrics']
-            data['step'] = test_info['data']['data_interval']
-            data['crca_threshold'] = crca_threshold
-            data['results'] = {
-                iteration: {
-                    'start_time': test_info['data']['start_time'],
-                    'end_time': test_info['data']['end_time'],
-                    'percentage': anomaly_result
+            data = {
+                'model': model,
+                'start_time': test_info['data']['start_time'],
+                'containers': test_info['data']['containers'],
+                'metrics': test_info['data']['metrics'],
+                'step': test_info['data']['data_interval'],
+                'crca_threshold': crca_threshold,
+                'results': {
+                    iteration: {
+                        'start_time': test_info['data']['start_time'],
+                        'end_time': test_info['data']['end_time'],
+                        'percentage': anomaly_result
+                    }
                 }
             }
 
@@ -101,20 +80,21 @@ def detect_anomalies():
                 }
             }
             crca_data_json = json.dumps(crca_data)
-
+            logger.info(f"Anomaly detected. Triggering RCA for task {task_id}")
             response = requests.post(f"{test_info['settings']['API_DATA_INGESTION_URL']}/anomaly_rca",
                                      data={'crca_data': crca_data_json})
             task_data = response.json()
-            task_id = task_data.get('task_id')
-            if task_id:
-                data['results'][iteration]['crca_task_id'] = task_id
+            rca_task_id = task_data.get('task_id')
+            if rca_task_id:
+                data['results'][iteration]['crca_task_id'] = rca_task_id
 
         with open(path+'/cgnn_results.json', 'w') as f:
             json.dump(data, f, indent=2)
 
+        logger.info(f"Anomaly detection completed for task {task_id}")
         return "success"
     except Exception as e:
-        logger.error(traceback.format_exc())
+        logger.error(f"Error in detect_anomalies: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -122,28 +102,9 @@ def detect_anomalies():
 def save_model():
     """
     Endpoint to save a trained model and its related information.
-
-    Expects:
-    - The model file as 'model' in form-data.
-    - JSON data 'model_info' in form-data containing:
-      - 'data': {
-          <model_name>: {
-              'model_params': <model_parameters>,
-              'model_config': <model_configuration>,
-              'model_evaluation': <model_evaluation>
-          }
-        }
-
-    Saves model to 'trained_models/<model_name>/model.pt' and related information
-    to 'trained_models/<model_name>/model_params.json',
-    'trained_models/<model_name>/model_config.json',
-    'trained_models/<model_name>/model_evaluation.json'.
-
-    Returns:
-    - "success" if successful.
-    - Error message and status code 500 if an error occurs.
     """
     try:
+        logger.info("Saving model")
         trained_model = request.files['model']
         model_info_json = request.form.get('model_info')
         model_info = json.loads(model_info_json)
@@ -165,9 +126,10 @@ def save_model():
         with open(model_path+'/model_evaluation.json', 'w') as f:
             json.dump(model_info['data'][model]['model_evaluation'], f, indent=2)
 
+        logger.info(f"Model {model} saved successfully")
         return jsonify("success"), 200
     except Exception as e:
-        logger.error(traceback.format_exc())
+        logger.error(f"Error in save_model: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -175,15 +137,13 @@ def save_model():
 def get_config_route():
     """
     Endpoint to get the current configuration settings.
-
-    Returns:
-    - JSON object containing the current configuration.
-    - Error message and status code 500 if an error occurs.
     """
     try:
+        logger.info("Retrieving configuration")
         config = get_config()
         return jsonify(config), 200
     except Exception as e:
+        logger.error(f"Error in get_config_route: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -191,19 +151,14 @@ def get_config_route():
 def update_config():
     """
     Endpoint to update the configuration settings.
-
-    Expects:
-    - JSON data containing the updated configuration.
-
-    Returns:
-    - "success" if successful.
-    - Error message and status code 500 if an error occurs.
     """
     new_config = request.json
     try:
+        logger.info("Updating configuration")
         set_config(new_config)
         return jsonify({"success"}), 200
     except Exception as e:
+        logger.error(f"Error in update_config: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -211,12 +166,9 @@ def update_config():
 def get_available_models():
     """
     Endpoint to get information about available trained models.
-
-    Returns:
-    - JSON object containing information about each trained model.
-    - Error message and status code 500 if an error occurs.
     """
     try:
+        logger.info("Retrieving available models")
         model_dir = 'trained_models/'
         models = {}
         for model in os.listdir(model_dir):
@@ -231,7 +183,7 @@ def get_available_models():
                     models[model]['model_evaluation'] = json.load(f)
         return jsonify(models), 200
     except Exception as e:
-        logger.error(traceback.format_exc())
+        logger.error(f"Error in get_available_models: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -239,20 +191,15 @@ def get_available_models():
 def get_results():
     """
     Endpoint to get results for a specific task ID.
-
-    Expects:
-    - JSON data containing 'task_id' for which results are requested.
-
-    Returns:
-    - JSON object containing results for the specified task ID.
-    - Error message and status code 500 if an error occurs.
     """
     try:
+        logger.info("Retrieving results for a specific task")
         task_id = request.json['task_id']
         with open('results/'+task_id+'/cgnn_results.json', 'r') as f:
             data = json.load(f)
         return jsonify(data), 200
     except Exception as e:
+        logger.error(f"Error in get_results: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -260,23 +207,20 @@ def get_results():
 def get_all_results():
     """
     Endpoint to get results for all tasks.
-
-    Returns:
-    - JSON object containing results for all tasks.
-    - Error message and status code 500 if an error occurs.
     """
     try:
+        logger.info("Retrieving all results")
         task_ids = os.listdir('results/')
         results = {}
         for task_id in task_ids:
             result_file = 'results/'+task_id+'/cgnn_results.json'
             if os.path.isfile(result_file):
-                with open('results/'+task_id+'/cgnn_results.json', 'r') as f:
+                with open(result_file, 'r') as f:
                     data = json.load(f)
                 results[task_id] = data
         return jsonify(results), 200
     except Exception as e:
-        logger.error(traceback.format_exc())
+        logger.error(f"Error in get_all_results: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -284,15 +228,9 @@ def get_all_results():
 def delete_results():
     """
     Endpoint to delete results for a specific task ID.
-
-    Expects:
-    - JSON data containing 'taskId' and 'crcaLink' for which results are to be deleted.
-
-    Returns:
-    - JSON object indicating success.
-    - Error message and status code 500 if an error occurs.
     """
     try:
+        logger.info("Deleting results for a specific task")
         data = request.get_json()
         task_id = data['taskId']
         crca_link = data['crcaLink']
@@ -304,10 +242,11 @@ def delete_results():
         shutil.rmtree('results/'+task_id)
         return jsonify({"success": True}), 200
     except Exception as e:
-        logger.error(traceback.format_exc())
+        logger.error(f"Error in delete_results: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
     set_initial_config()
+    logger.info("Starting Flask app")
     app.run(debug=True, host='0.0.0.0', port=5013)

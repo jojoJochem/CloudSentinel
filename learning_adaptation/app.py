@@ -49,6 +49,7 @@ def cgnn_train_models():
         logger.debug(f"Train Info: {train_info}")
 
         task = train_and_evaluate_task.apply_async(args=[train_array, test_array, anomaly_label_array, train_info])
+        logger.info(f"Task {task.id} started for CGNN model training")
 
         return jsonify({"task_id": task.id}), 202
     except Exception as e:
@@ -67,23 +68,28 @@ def get_status(task_id):
     Returns:
         json: The task status and info.
     """
-    task = train_and_evaluate_task.AsyncResult(task_id)
-    if task.state == 'PENDING':
-        response = {
-            'state': task.state,
-            'status': 'Pending... (this may take a while)'
-        }
-    elif task.state != 'FAILURE':
-        response = {
-            'state': task.state,
-            'status': task.info
-        }
-    else:
-        response = {
-            'state': task.state,
-            'status': str(task.info)
-        }
-    return jsonify(response)
+    try:
+        task = train_and_evaluate_task.AsyncResult(task_id)
+        if task.state == 'PENDING':
+            response = {
+                'state': task.state,
+                'status': 'Pending... (this may take a while)'
+            }
+        elif task.state != 'FAILURE':
+            response = {
+                'state': task.state,
+                'status': task.info
+            }
+        else:
+            response = {
+                'state': task.state,
+                'status': str(task.info)
+            }
+        logger.info(f"Retrieved status for task {task_id}: {response}")
+        return jsonify(response)
+    except Exception as e:
+        logger.error(f"Error retrieving status for task {task_id}: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/get_available_models', methods=['GET'])
@@ -94,19 +100,24 @@ def get_available_models():
     Returns:
         json: A dictionary of models with their parameters, configuration, and evaluation.
     """
-    model_dir = 'trained_models_temp'
-    models = {}
-    for model_name in os.listdir(model_dir):
-        model_path = os.path.join(model_dir, model_name)
-        with open(os.path.join(model_path, 'model_params.json'), 'r') as f:
-            params = json.load(f)
-        with open(os.path.join(model_path, 'model_config.json'), 'r') as f:
-            config = json.load(f)
-        with open(os.path.join(model_path, 'model_evaluation.json'), 'r') as f:
-            evaluation = json.load(f)
-        models[model_name] = {'model_params': params, 'model_config': config, 'model_evaluation': evaluation}
+    try:
+        model_dir = 'trained_models_temp'
+        models = {}
+        for model_name in os.listdir(model_dir):
+            model_path = os.path.join(model_dir, model_name)
+            with open(os.path.join(model_path, 'model_params.json'), 'r') as f:
+                params = json.load(f)
+            with open(os.path.join(model_path, 'model_config.json'), 'r') as f:
+                config = json.load(f)
+            with open(os.path.join(model_path, 'model_evaluation.json'), 'r') as f:
+                evaluation = json.load(f)
+            models[model_name] = {'model_params': params, 'model_config': config, 'model_evaluation': evaluation}
 
-    return jsonify(models)
+        logger.info("Retrieved available models")
+        return jsonify(models)
+    except Exception as e:
+        logger.error(f"Error retrieving available models: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/save_to_detection_module', methods=['POST'])
@@ -117,23 +128,26 @@ def save_to_detection_module():
     Returns:
         json: Success message or error details.
     """
-    model_info_json = request.form.get('model_info')
-    model_info = json.loads(model_info_json)
-    path = f"trained_models_temp/{next(iter(model_info['data']))}"
-    model = torch.load(path+'/model.pt', map_location='cpu')
-    json_data = {key: value.tolist() for key, value in model.items()}
-    model_json = json.dumps(json_data, indent=2)
-
     try:
+        model_info_json = request.form.get('model_info')
+        model_info = json.loads(model_info_json)
+        path = f"trained_models_temp/{next(iter(model_info['data']))}"
+        model = torch.load(path+'/model.pt', map_location='cpu')
+        json_data = {key: value.tolist() for key, value in model.items()}
+        model_json = json.dumps(json_data, indent=2)
+
         model_info_json = json.dumps(model_info)
         response = requests.post(model_info['settings']['API_CGNN_ANOMALY_DETECTION_URL'] + '/save_model',
                                  files={'model': model_json}, data={'model_info': model_info_json})
 
         if response.status_code == 200:
             shutil.rmtree(path)
+            logger.info(f"Model saved to detection module and local path {path} deleted")
+        else:
+            logger.error(f"Failed to save model to detection module: {response.text}")
         return jsonify("success"), 200
     except Exception as e:
-        logger.error(traceback.format_exc())
+        logger.error(f"Error saving model to detection module: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -145,57 +159,55 @@ def cgnn_train_with_existing_dataset():
     Returns:
         Response: The response from the data processing service.
     """
-    train_info_json = request.form.get('train_info')
-    train_info = json.loads(train_info_json)
-
-    dataset = train_info['data']['dataset']
-    directory = 'datasets/'+dataset
-    test_label_filename = f"test_label_{dataset}"
-    test_filename = f"test_{dataset}"
-    train_filename = f"train_{dataset}"
-
-    for filename in os.listdir(directory):
-        if filename == test_label_filename:
-            anomaly_label_array = pd.read_csv(directory+'/'+test_label_filename, header=None)
-        elif filename == test_filename:
-            test_array = pd.read_csv(directory+'/'+test_filename, header=None)
-        elif filename == train_filename:
-            train_array = pd.read_csv(directory+'/'+train_filename, header=None)
-
-    # read the details.json from the directory
-    details_file = os.path.join(directory, 'details.json')
-    with open(details_file, 'r') as file:
-        model_config = json.load(file)
-
-    dataset_containers = model_config['containers']
-    dataset_metrics = model_config['metrics']
-
-    # Generate new headers for all combinations of containers and metrics
-    new_headers = [f"{container}_{metric}" for container in dataset_containers for metric in dataset_metrics]
-    # Rename the dataframe columns
-    train_array.columns = new_headers
-    test_array.columns = new_headers
-
-    selected_containers = train_info['data']['containers']
-    selected_metrics = train_info['data']['metrics']
-
-    selected_headers = [f"{container}_{metric}" for container in selected_containers for metric in selected_metrics]
-    train_array_filtered = train_array[selected_headers]
-    test_array_filtered = test_array[selected_headers]
-
-    train_files = {
-        'train_array': train_array_filtered.to_csv(header=False, index=False),
-        'test_array': test_array_filtered.to_csv(header=False, index=False),
-        'anomaly_label_array': anomaly_label_array.to_csv(header=False, index=False)
-    }
-    train_info['data']['step_size'] = model_config['step_size']
-    train_info['data']['duration'] = model_config['duration']
-    train_info['data']['anomaly_sequence'] = model_config['anomaly_sequence']
-    train_info['data']['data_entries'] = len(anomaly_label_array)
-
-    train_info_json = json.dumps(train_info)
-    print(train_info)
     try:
+        train_info_json = request.form.get('train_info')
+        train_info = json.loads(train_info_json)
+
+        dataset = train_info['data']['dataset']
+        directory = 'datasets/'+dataset
+        test_label_filename = f"test_label_{dataset}"
+        test_filename = f"test_{dataset}"
+        train_filename = f"train_{dataset}"
+
+        for filename in os.listdir(directory):
+            if filename == test_label_filename:
+                anomaly_label_array = pd.read_csv(directory+'/'+test_label_filename, header=None)
+            elif filename == test_filename:
+                test_array = pd.read_csv(directory+'/'+test_filename, header=None)
+            elif filename == train_filename:
+                train_array = pd.read_csv(directory+'/'+train_filename, header=None)
+
+        details_file = os.path.join(directory, 'details.json')
+        with open(details_file, 'r') as file:
+            model_config = json.load(file)
+
+        dataset_containers = model_config['containers']
+        dataset_metrics = model_config['metrics']
+
+        new_headers = [f"{container}_{metric}" for container in dataset_containers for metric in dataset_metrics]
+        train_array.columns = new_headers
+        test_array.columns = new_headers
+
+        selected_containers = train_info['data']['containers']
+        selected_metrics = train_info['data']['metrics']
+
+        selected_headers = [f"{container}_{metric}" for container in selected_containers for metric in selected_metrics]
+        train_array_filtered = train_array[selected_headers]
+        test_array_filtered = test_array[selected_headers]
+
+        train_files = {
+            'train_array': train_array_filtered.to_csv(header=False, index=False),
+            'test_array': test_array_filtered.to_csv(header=False, index=False),
+            'anomaly_label_array': anomaly_label_array.to_csv(header=False, index=False)
+        }
+        train_info['data']['step_size'] = model_config['step_size']
+        train_info['data']['duration'] = model_config['duration']
+        train_info['data']['anomaly_sequence'] = model_config['anomaly_sequence']
+        train_info['data']['data_entries'] = len(anomaly_label_array)
+
+        train_info_json = json.dumps(train_info)
+        logger.info(f"Training with existing dataset: {train_info}")
+
         response = requests.post(f'{train_info["settings"]["API_DATA_PROCESSING_URL"]}/preprocess_cgnn_train_data',
                                  files=train_files, data={'train_info': train_info_json})
         flask_response = Response(
@@ -203,9 +215,10 @@ def cgnn_train_with_existing_dataset():
             status=response.status_code,
             content_type=response.headers['Content-Type']
         )
+        logger.info(f"Training data sent to processing API, response status: {response.status_code}")
         return flask_response
     except Exception as e:
-        logger.error(traceback.format_exc())
+        logger.error(f"Error training with existing dataset: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -217,8 +230,10 @@ def update_config():
     new_config = request.json
     try:
         set_config(new_config)
+        logger.info("Configuration updated successfully")
         return jsonify({"success"}), 200
     except Exception as e:
+        logger.error(f"Error updating configuration: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -230,8 +245,13 @@ def get_config_route():
     Returns:
         json: The current configuration.
     """
-    config = get_config()
-    return jsonify(config)
+    try:
+        config = get_config()
+        logger.info("Configuration retrieved successfully")
+        return jsonify(config)
+    except Exception as e:
+        logger.error(f"Error retrieving configuration: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/get_available_datasets', methods=['GET'])
@@ -242,21 +262,26 @@ def get_available_datasets():
     Returns:
         json: A dictionary of available datasets and their details.
     """
-    combined_details = {}
+    try:
+        combined_details = {}
 
-    # Iterate over each directory in the datasets path
-    for dir_name in os.listdir('datasets'):
-        dir_path = os.path.join('datasets', dir_name)
-        if os.path.isdir(dir_path):
-            details_file = os.path.join(dir_path, 'details.json')
-            if os.path.isfile(details_file):
-                with open(details_file, 'r') as file:
-                    details = json.load(file)
-                    combined_details[dir_name] = details
+        for dir_name in os.listdir('datasets'):
+            dir_path = os.path.join('datasets', dir_name)
+            if os.path.isdir(dir_path):
+                details_file = os.path.join(dir_path, 'details.json')
+                if os.path.isfile(details_file):
+                    with open(details_file, 'r') as file:
+                        details = json.load(file)
+                        combined_details[dir_name] = details
 
-    return jsonify(combined_details)
+        logger.info("Available datasets retrieved successfully")
+        return jsonify(combined_details)
+    except Exception as e:
+        logger.error(f"Error retrieving available datasets: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
     set_initial_config()
+    logger.info("Starting Flask app")
     app.run(debug=True, host='0.0.0.0', port=5005)
