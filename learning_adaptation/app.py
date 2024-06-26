@@ -88,7 +88,7 @@ def get_status(task_id):
         logger.info(f"Retrieved status for task {task_id}: {response}")
         return jsonify(response)
     except Exception as e:
-        logger.error(f"Error retrieving status for task {task_id}: {str(e)}")
+        logger.error(f"Error retrieving status for task {task_id}: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -116,7 +116,7 @@ def get_available_models():
         logger.info("Retrieved available models")
         return jsonify(models)
     except Exception as e:
-        logger.error(f"Error retrieving available models: {str(e)}")
+        logger.error(f"Error retrieving available models: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -233,7 +233,7 @@ def update_config():
         logger.info("Configuration updated successfully")
         return jsonify({"success"}), 200
     except Exception as e:
-        logger.error(f"Error updating configuration: {str(e)}")
+        logger.error(f"Error updating configuration: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -250,7 +250,7 @@ def get_config_route():
         logger.info("Configuration retrieved successfully")
         return jsonify(config)
     except Exception as e:
-        logger.error(f"Error retrieving configuration: {str(e)}")
+        logger.error(f"Error retrieving configuration: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -277,7 +277,7 @@ def get_available_datasets():
         logger.info("Available datasets retrieved successfully")
         return jsonify(combined_details)
     except Exception as e:
-        logger.error(f"Error retrieving available datasets: {str(e)}")
+        logger.error(f"Error retrieving available datasets: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 

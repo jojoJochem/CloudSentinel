@@ -68,7 +68,7 @@ def monitoring_task(self, monitor_info):
             time.sleep(test_info['data']['test_interval'] * 60)
             iteration += 1
         except Exception as e:
-            logger.error(f"Error in monitoring task {self.request.id}: {str(e)}")
+            logger.error(f"Error in monitoring task {self.request.id}: {traceback.format_exc()}")
             break
 
 
@@ -87,7 +87,7 @@ def start_monitoring():
         logger.info(f"Task {task.id} started")
         return jsonify({'status': 'monitoring_started', 'task_id': task.id}), 200
     except Exception as e:
-        logger.error(f"Error starting monitoring task: {str(e)}")
+        logger.error(f"Error starting monitoring task: {traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
@@ -104,7 +104,7 @@ def get_tasks():
         logger.info("Retrieved active tasks")
         return jsonify(active_tasks), 200
     except Exception as e:
-        logger.error(f"Error retrieving active tasks: {str(e)}")
+        logger.error(f"Error retrieving active tasks: {traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
@@ -128,7 +128,7 @@ def stop_monitoring(task_id):
             logger.warning("Task ID is missing")
             return jsonify({'status': 'task_id_missing'}), 400
     except Exception as e:
-        logger.error(f"Error stopping task {task_id}: {str(e)}")
+        logger.error(f"Error stopping task {task_id}: {traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
@@ -184,16 +184,16 @@ def load_config():
         logger.info("Kubernetes configuration loaded successfully")
         return jsonify({"message": "Kubernetes configuration loaded successfully."}), 200
     except FileNotFoundError as e:
-        logger.error(f"Kubernetes configuration file not found: {str(e)}")
+        logger.error(f"Kubernetes configuration file not found: {traceback.format_exc()}")
         return jsonify({"error": "Kubernetes configuration file not found"}), 400
     except config.ConfigException as e:
-        logger.error(f"Error loading Kubernetes configuration: {str(e)}")
+        logger.error(f"Error loading Kubernetes configuration: {traceback.format_exc()}")
         return jsonify({"error": "Invalid Kubernetes configuration"}), 400
     except ConnectionError as e:
-        logger.error(f"Could not connect to Kubernetes cluster: {str(e)}")
+        logger.error(f"Could not connect to Kubernetes cluster: {traceback.format_exc()}")
         return jsonify({"error": "Could not connect to Kubernetes cluster"}), 503
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logger.error(f"Unexpected error: {traceback.format_exc()}")
         return jsonify({"error": "Internal Server Error"}), 500
 
 
@@ -210,7 +210,7 @@ def get_config_route():
         logger.info("Metrics configuration retrieved")
         return jsonify(config), 200
     except Exception as e:
-        logger.error(f"Error retrieving metrics configuration: {str(e)}")
+        logger.error(f"Error retrieving metrics configuration: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -228,7 +228,7 @@ def update_config():
         logger.info("Configuration updated successfully")
         return jsonify("success"), 200
     except Exception as e:
-        logger.error(f"Error updating configuration: {str(e)}")
+        logger.error(f"Error updating configuration: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
 
