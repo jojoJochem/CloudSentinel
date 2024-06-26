@@ -22,44 +22,56 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Build and push
+    - name: Build and push data_ingestion
       uses: docker/build-push-action@v6
       with:
+        context: ./data_ingestion
+        file: ./data_ingestion/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest
 
-    - name: Build and push
+    - name: Build and push data_processing
       uses: docker/build-push-action@v6
       with:
+        context: ./data_processing
+        file: ./data_processing/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/data_processing:latest
 
-    - name: Build and push
+    - name: Build and push anomaly_detection_cgnn
       uses: docker/build-push-action@v6
       with:
+        context: ./anomaly_detection/cgnn
+        file: ./anomaly_detection/cgnn/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_cgnn:latest
 
-    - name: Build and push
+    - name: Build and push anomaly_detection_crca
       uses: docker/build-push-action@v6
       with:
+        context: ./anomaly_detection/crca
+        file: ./anomaly_detection/crca/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest
 
-    - name: Build and push
+    - name: Build and push learning_adaptation
       uses: docker/build-push-action@v6
       with:
+        context: ./learning_adaptation
+        file: ./learning_adaptation/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/learning_adaptation:latest
 
-    - name: Build and push
+    - name: Build and push monitoring_project
       uses: docker/build-push-action@v6
       with:
+        context: ./user_interface/monitoring_project
+        file: ./user_interface/monitoring_project/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/monitoring_project:latest
