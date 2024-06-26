@@ -13,6 +13,7 @@ spec:
       labels:
         app: data-ingestion
     spec:
+      serviceAccountName: data-ingestion-sa  # Ensure this is set correctly
       containers:
       - name: data-ingestion
         image: jojojochem/data_ingestion:latest
