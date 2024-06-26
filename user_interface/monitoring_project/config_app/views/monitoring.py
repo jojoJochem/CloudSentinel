@@ -7,6 +7,7 @@ from django.conf import settings
 from django.http import JsonResponse
 import json
 
+
 def monitoring_home(request):
     """
     Renders the home page for monitoring, loading the Kubernetes configuration and pod names.

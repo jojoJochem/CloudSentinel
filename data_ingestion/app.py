@@ -55,7 +55,7 @@ def monitoring_task(self, monitor_info):
 
             end_time = int(time.time())
             start_time = end_time - (test_info['data']['duration'] * 60)
-            dataframe = fetch_metrics(test_info['data']['pods'], test_info['data']['metrics'], start_time, end_time,
+            dataframe = fetch_metrics(test_info['data']['containers'], test_info['data']['metrics'], start_time, end_time,
                                       test_info['settings']['PROMETHEUS_URL'], test_info['data']['data_interval'])
             test_files = {'test_array': dataframe.to_csv(header=False, index=False)}
             test_info['data']['start_time'] = start_time
