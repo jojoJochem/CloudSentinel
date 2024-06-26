@@ -22,19 +22,3 @@ spec:
           value: "redis://redis:6379/2"
         - name: CELERY_RESULT_BACKEND
           value: "redis://redis:6379/2"
-        livenessProbe:
-          exec:
-            command:
-            - celery
-            - inspect
-            - ping
-          initialDelaySeconds: 10
-          periodSeconds: 60
-        readinessProbe:
-          exec:
-            command:
-            - celery
-            - inspect
-            - ping
-          initialDelaySeconds: 5
-          periodSeconds: 30
