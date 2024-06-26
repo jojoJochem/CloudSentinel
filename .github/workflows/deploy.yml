@@ -29,22 +29,66 @@ jobs:
         key: ${{ runner.os }}-buildx-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-buildx-
- 
-    - name: Build and push Docker images
+
+    - name: Build and push data_ingestion Docker image
       uses: docker/build-push-action@v2
       with:
-        context: .
+        context: ./data_ingestion
+        file: ./data_ingestion/Dockerfile
         push: true
-        tags: |
-          jojojochem/data_ingestion:latest
-          jojojochem/data_processing:latest
-          jojojochem/anomaly_detection_cgnn:latest
-          jojojochem/anomaly_detection_crca:latest
-          jojojochem/learning_adaptation:latest
-          jojojochem/monitoring_project:latest
+        tags: jojojochem/data_ingestion:latest
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
 
+    - name: Build and push data_processing Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: ./data_processing
+        file: ./data_processing/Dockerfile
+        push: true
+        tags: jojojochem/data_processing:latest
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
+
+    - name: Build and push anomaly_detection_cgnn Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: ./anomaly_detection/cgnn
+        file: ./anomaly_detection/cgnn/Dockerfile
+        push: true
+        tags: jojojochem/anomaly_detection_cgnn:latest
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
+
+    - name: Build and push anomaly_detection_crca Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: ./anomaly_detection/crca
+        file: ./anomaly_detection/crca/Dockerfile
+        push: true
+        tags: jojojochem/anomaly_detection_crca:latest
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
+
+    - name: Build and push learning_adaptation Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: ./learning_adaptation
+        file: ./learning_adaptation/Dockerfile
+        push: true
+        tags: jojojochem/learning_adaptation:latest
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
+
+    - name: Build and push monitoring_project Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: ./user_interface/monitoring_project
+        file: ./user_interface/monitoring_project/Dockerfile
+        push: true
+        tags: jojojochem/monitoring_project:latest
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
 
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v0
