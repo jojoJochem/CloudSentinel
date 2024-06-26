@@ -19,6 +19,8 @@ spec:
         ports:
         - containerPort: 8000
         env:
+        - name: DJANGO_ALLOWED_HOSTS
+          value: "34.44.116.210,localhost,127.0.0.1"
         - name: API_DATA_INGESTION_URL
           value: "http://data-ingestion-service.cloudsentinel.svc.cluster.local:80"
         - name: API_DATA_PROCESSING_URL
@@ -47,3 +49,4 @@ spec:
       port: 80
       targetPort: 8000
   type: LoadBalancer
+  loadBalancerIP: 34.44.116.210
