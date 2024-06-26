@@ -18,7 +18,7 @@ import os
 # with open('monitoring_project/config.json') as config_file:
 #     dynamic_config = json.load(config_file)
 # globals().update(dynamic_config)
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
+# ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
 API_DATA_INGESTION_URL = os.getenv('API_DATA_INGESTION_URL', 'http://data-ingestion-service.cloudsentinel.svc.cluster.local:80')
 API_DATA_PROCESSING_URL = os.getenv('API_DATA_PROCESSING_URL', 'http://data-processing-service.cloudsentinel.svc.cluster.local:80')
 API_CRCA_ANOMALY_DETECTION_URL = os.getenv('API_CRCA_ANOMALY_DETECTION_URL', 'http://crca-anomaly-detection-service.cloudsentinel.svc.cluster.local:80')
@@ -39,6 +39,8 @@ SECRET_KEY = "django-insecure-&egy-$lq%)&cr4-c4=efe7*3eozqo(ej^9hcic7%^p3(()hboo
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+ALLOWED_HOSTS = ['34.44.116.210', 'localhost', '127.0.0.1']
 
 
 # Application definition
