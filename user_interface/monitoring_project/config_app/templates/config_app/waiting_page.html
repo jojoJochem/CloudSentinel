@@ -14,10 +14,13 @@
         var task_type = "{{ task_type|safe }}";
 
         function checkStatus() {
+            console.log("Checking status for task_id: " + task_id);
             $.ajax({
                 url: api_url + "/get_status/" + task_id,
                 method: "GET",
+                timeout: 10000, // Set a timeout of 10 seconds
                 success: function (data) {
+                    console.log("Response received: ", data);
                     if (data.state === 'SUCCESS') {
                         window.location.href = "{% url 'get_results' task_id task_type %}";
                     } else if (data.state === 'FAILURE') {
@@ -27,8 +30,13 @@
                         $('#status').text("Status: " + data.status);
                     }
                 },
-                error: function() {
-                    $('#status').text("An error occurred while checking the status.");
+                error: function(jqXHR, textStatus) {
+                    console.error("Error occurred: ", textStatus);
+                    if (textStatus === 'timeout') {
+                        $('#status').text("The request timed out.");
+                    } else {
+                        $('#status').text("An error occurred while checking the status.");
+                    }
                     clearInterval(interval);
                 }
             });

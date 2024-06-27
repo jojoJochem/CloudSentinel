@@ -26,7 +26,6 @@ API_CGNN_ANOMALY_DETECTION_URL = os.getenv('API_CGNN_ANOMALY_DETECTION_URL', 'ht
 API_LEARNING_ADAPTATION_URL = os.getenv('API_LEARNING_ADAPTATION_URL', 'http://learning-adaptation-service.cloudsentinel.svc.cluster.local:80')
 PROMETHEUS_URL = os.getenv('PROMETHEUS_URL', 'http://prometheus-server.monitoring.svc.cluster.local:80')
 CLUSTER_NAMESPACE = os.getenv('CLUSTER_NAMESPACE', 'kube-system')
-KUBE_CONFIG_PATH = os.getenv('KUBE_CONFIG_PATH', '/Users/jochemvangaalen/.kube/config')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
