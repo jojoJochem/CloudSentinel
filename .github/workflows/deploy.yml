@@ -84,15 +84,15 @@ jobs:
         kubectl apply -f k8s/crca_anomaly_detection-celery-deployment.yml
         kubectl apply -f k8s/monitoring_project-deployment.yml
 
-        kubectl set image deployment/celery-worker-deployment  data-ingestion-container=${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest -n cloudsentinel
-        kubectl set image deployment/data-ingestion-deployment data-ingestion-container=${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest -n cloudsentinel
-        kubectl set image deployment/data-processing-deployment data-processing-container=${{ secrets.DOCKER_USERNAME }}/data_processing:latest -n cloudsentinel
-        kubectl set image deployment/cgnn-anomaly-detection-deployment cgnn-anomaly-detection-container=${{ secrets.DOCKER_USERNAME }}/anomaly_detection_cgnn:latest -n cloudsentinel
-        kubectl set image deployment/crca-anomaly-detection-deployment crca-anomaly-detection-container=${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest -n cloudsentinel
-        kubectl set image deployment/crca-anomaly-detection-celery-deployment crca-anomaly-detection-container=${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest -n cloudsentinel
-        kubectl set image deployment/learning-adaptation-celery-deployment learning-adaptation-container=${{ secrets.DOCKER_USERNAME }}/learning_adaptation:latest -n cloudsentinel
-        kubectl set image deployment/learning-adaptation-deployment learning-adaptation-container=${{ secrets.DOCKER_USERNAME }}/learning_adaptation:latest -n cloudsentinel
-        kubectl set image deployment/monitoring-project-deployment monitoring-project-container=${{ secrets.DOCKER_USERNAME }}/monitoring_project:latest -n cloudsentinel
+        kubectl set image deployment/celery-worker-deployment  celery-worker=${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest -n cloudsentinel
+        kubectl set image deployment/data-ingestion-deployment data-ingestion=${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest -n cloudsentinel
+        kubectl set image deployment/data-processing-deployment data-processing=${{ secrets.DOCKER_USERNAME }}/data_processing:latest -n cloudsentinel
+        kubectl set image deployment/cgnn-anomaly-detection-deployment cgnn-anomaly-detection=${{ secrets.DOCKER_USERNAME }}/anomaly_detection_cgnn:latest -n cloudsentinel
+        kubectl set image deployment/crca-anomaly-detection-deployment crca-anomaly-detection=${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest -n cloudsentinel
+        kubectl set image deployment/crca-anomaly-detection-celery-deployment crca-anomaly-detection-celery=${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest -n cloudsentinel
+        kubectl set image deployment/learning-adaptation-celery-deployment learning-adaptation-celery=${{ secrets.DOCKER_USERNAME }}/learning_adaptation:latest -n cloudsentinel
+        kubectl set image deployment/learning-adaptation-deployment learning-adaptation=${{ secrets.DOCKER_USERNAME }}/learning_adaptation:latest -n cloudsentinel
+        kubectl set image deployment/monitoring-project-deployment monitoring-project=${{ secrets.DOCKER_USERNAME }}/monitoring_project:latest -n cloudsentinel
 
         # kubectl patch deployment celery-worker-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
         # kubectl patch deployment data-ingestion-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
