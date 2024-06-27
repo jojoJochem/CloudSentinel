@@ -84,13 +84,13 @@ jobs:
         kubectl apply -f k8s/crca_anomaly_detection-celery-deployment.yml
         kubectl apply -f k8s/monitoring_project-deployment.yml
 
-        kubectl patch deployment celery-worker-deployment -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
-        kubectl patch deployment data-ingestion-deployment -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
-        kubectl patch deployment data-processing-deployment -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
-        kubectl patch deployment crca-anomaly-detection-deployment -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
-        kubectl patch deployment crca-anomaly-detection-celery-deployment -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
-        kubectl patch deployment cgnn-anomaly-detection-deployment -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
-        kubectl patch deployment learning-adaptation-deployment -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
-        kuberts patch deployment learning-adaptation-celery-deployment -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
-        kubectl patch deployment monitoring-project-deployment -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
+        kubectl patch deployment celery-worker-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
+        kubectl patch deployment data-ingestion-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
+        kubectl patch deployment data-processing-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
+        kubectl patch deployment crca-anomaly-detection-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
+        kubectl patch deployment crca-anomaly-detection-celery-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
+        kubectl patch deployment cgnn-anomaly-detection-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
+        kubectl patch deployment learning-adaptation-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
+        kuberts patch deployment learning-adaptation-celery-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
+        kubectl patch deployment monitoring-project-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
 
