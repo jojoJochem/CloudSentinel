@@ -13,6 +13,5 @@ def get_settings(request):
         'API_LEARNING_ADAPTATION_URL': settings.API_LEARNING_ADAPTATION_URL,
         'PROMETHEUS_URL': settings.PROMETHEUS_URL,
         'CLUSTER_NAMESPACE': settings.CLUSTER_NAMESPACE,
-        'KUBE_CONFIG_PATH': settings.KUBE_CONFIG_PATH,
     }
     return Response(exposed_settings)

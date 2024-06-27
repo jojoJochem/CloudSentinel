@@ -133,7 +133,7 @@ def load_kube_config():
     """
     try:
         logger.info("Loading Kubernetes configuration")
-        requests.post(f'{settings.API_DATA_INGESTION_URL}/load_kube_config', json={'kube_config_path': settings.KUBE_CONFIG_PATH})
+        requests.post(f'{settings.API_DATA_INGESTION_URL}/load_kube_config')
         logger.info("Kubernetes configuration loaded successfully")
         return JsonResponse({'status': 'success'})
     except RequestException as e:
