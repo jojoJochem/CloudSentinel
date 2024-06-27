@@ -186,16 +186,16 @@ def load_config():
         return jsonify({"message": "Kubernetes configuration loaded successfully."}), 200
     except FileNotFoundError as e:
         logger.error(f"Kubernetes configuration file not found: {traceback.format_exc()}")
-        return jsonify({"error": "Kubernetes configuration file not found"}), 400
+        return jsonify({"error": f"Kubernetes configuration file not found: {str(e)}"}), 400
     except config.ConfigException as e:
         logger.error(f"Error loading Kubernetes configuration: {traceback.format_exc()}")
-        return jsonify({"error": "Invalid Kubernetes configuration"}), 400
+        return jsonify({"error": f"Invalid Kubernetes configuration: {str(e)}"}), 400
     except ConnectionError as e:
         logger.error(f"Could not connect to Kubernetes cluster: {traceback.format_exc()}")
-        return jsonify({"error": "Could not connect to Kubernetes cluster"}), 503
+        return jsonify({"error": f"Could not connect to Kubernetes cluster: {str(e)}"}), 503
     except Exception as e:
         logger.error(f"Unexpected error: {traceback.format_exc()}")
-        return jsonify({"error": "Internal Server Error"}), 500
+        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
 
 @app.route('/get_metrics', methods=['GET'])
