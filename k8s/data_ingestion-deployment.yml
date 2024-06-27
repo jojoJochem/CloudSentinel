@@ -17,6 +17,7 @@ spec:
       containers:
       - name: data-ingestion
         image: jojojochem/data_ingestion:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5001
         env:
@@ -24,7 +25,6 @@ spec:
           value: "redis://redis:6379/0"
         - name: CELERY_RESULT_BACKEND
           value: "redis://redis:6379/0"
-        imagePullPolicy: Always
 ---
 apiVersion: v1
 kind: Service

@@ -16,9 +16,9 @@ spec:
       containers:
       - name: cgnn-anomaly-detection
         image: jojojochem/anomaly_detection_cgnn:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5013
-        imagePullPolicy: Always
 
 ---
 apiVersion: v1

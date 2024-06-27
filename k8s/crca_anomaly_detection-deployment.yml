@@ -16,6 +16,7 @@ spec:
       containers:
       - name: crca-anomaly-detection
         image: jojojochem/anomaly_detection_crca:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5023
         env:
@@ -23,7 +24,6 @@ spec:
           value: "redis://redis:6379/1"
         - name: CELERY_RESULT_BACKEND
           value: "redis://redis:6379/1"
-        imagePullPolicy: Always
 ---
 apiVersion: v1
 kind: Service

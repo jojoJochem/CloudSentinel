@@ -16,9 +16,9 @@ spec:
       containers:
       - name: data-processing
         image: jojojochem/data_processing:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5002
-        imagePullPolicy: Always
 ---
 apiVersion: v1
 kind: Service

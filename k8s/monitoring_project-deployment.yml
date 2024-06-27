@@ -16,6 +16,7 @@ spec:
       containers:
       - name: monitoring-project
         image: jojojochem/monitoring_project:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000
         env:
@@ -35,7 +36,6 @@ spec:
           value: "http://prometheus-server.monitoring.svc.cluster.local:80"
         - name: CLUSTER_NAMESPACE
           value: "cloudsentinel"
-        imagePullPolicy: Always
 ---
 apiVersion: v1
 kind: Service
