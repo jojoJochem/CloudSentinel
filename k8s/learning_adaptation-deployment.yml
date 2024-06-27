@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: learning-adaptation
-        image: jojojochem/learning_adaptation:${COMMIT_SHA}
+        image: jojojochem/learning_adaptation:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5005

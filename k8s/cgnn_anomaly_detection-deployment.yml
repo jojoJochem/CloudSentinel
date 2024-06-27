@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: cgnn-anomaly-detection
-        image: jojojochem/anomaly_detection_cgnn:${COMMIT_SHA}
+        image: jojojochem/anomaly_detection_cgnn:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5013

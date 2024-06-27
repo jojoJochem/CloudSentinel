@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: crca-anomaly-detection-celery
-        image: jojojochem/anomaly_detection_crca:${COMMIT_SHA}
+        image: jojojochem/anomaly_detection_crca:latest
         imagePullPolicy: Always
         command: ["celery", "-A", "app.celery", "worker", "--loglevel=info", "-P", "gevent"]
         env:

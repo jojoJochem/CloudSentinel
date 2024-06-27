@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: data-processing
-        image: jojojochem/data_processing:${COMMIT_SHA}
+        image: jojojochem/data_processing:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5002

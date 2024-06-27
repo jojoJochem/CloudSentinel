@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: celery-worker
-        image: jojojochem/data_ingestion:${COMMIT_SHA}
+        image: jojojochem/data_ingestion:latest
         imagePullPolicy: Always
         command: ["celery", "-A", "app.celery", "worker", "--loglevel=info"]
         env:

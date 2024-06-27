@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: learning-adaptation-celery
-        image: jojojochem/learning_adaptation:${COMMIT_SHA}
+        image: jojojochem/learning_adaptation:latest
         imagePullPolicy: Always
         command: ["celery", "-A", "app.celery", "worker", "--loglevel=info"]
         env:
