@@ -56,19 +56,19 @@ jobs:
       run: |
         gcloud container clusters get-credentials cscluster --zone us-central1-a --project cloudsentinel-427513
 
-    - name: Install Helm
-      run: |
-        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+    # - name: Install Helm
+    #   run: |
+    #     curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
-    - name: Add Prometheus Helm repository
-      run: |
-        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-        helm repo update
+    # - name: Add Prometheus Helm repository
+    #   run: |
+    #     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    #     helm repo update
 
-    - name: Deploy Prometheus
-      run: |
-        kubectl create namespace monitoring || true
-        helm install prometheus prometheus-community/prometheus -n monitoring
+    # - name: Deploy Prometheus
+    #   run: |
+    #     kubectl create namespace monitoring || true
+    #     helm install prometheus prometheus-community/prometheus -n monitoring
 
     - name: Deploy to Kubernetes
       run: |
