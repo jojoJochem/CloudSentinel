@@ -22,3 +22,4 @@ spec:
           value: "redis://redis:6379/0"
         - name: CELERY_RESULT_BACKEND
           value: "redis://redis:6379/0"
+        imagePullPolicy: Always

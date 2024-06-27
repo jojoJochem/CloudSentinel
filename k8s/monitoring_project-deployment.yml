@@ -35,6 +35,7 @@ spec:
           value: "http://prometheus-server.monitoring.svc.cluster.local:80"
         - name: CLUSTER_NAMESPACE
           value: "cloudsentinel"
+        imagePullPolicy: Always
 ---
 apiVersion: v1
 kind: Service

@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import logging
 import json
+import os
 import traceback
 import shutil
 import pandas as pd
@@ -8,7 +9,7 @@ from flask_cors import CORS
 from celery import Celery
 
 from config import set_config, get_config, set_initial_config
-from tasks import run_crca_task
+from crca import run_crca
 
 # Set multiprocessing start method to 'spawn' for Celery compatibility
 import multiprocessing
@@ -18,19 +19,45 @@ multiprocessing.set_start_method('spawn', force=True)
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all routes
 
+# Set the environment variable
+os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+
+# Configure and initialize Celery instance
+app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/1'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/1'
+celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'], broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Configure Celery
-app.config.update(
-    CELERY_BROKER_URL='redis://redis:6379/1',      # Redis URL for broker
-    CELERY_RESULT_BACKEND='redis://redis:6379/1'   # Redis URL for backend
-)
+# Command to run the Celery worker:
+# celery -A app.celery worker --loglevel=info -P gevent
 
-# Initialize Celery instance
-celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'], broker=app.config['CELERY_BROKER_URL'])
-celery.conf.update(app.config)
+
+@celery.task(bind=True)
+def run_crca_task(self, crca_data_json, crca_info):
+    """
+    Celery task to perform crca.
+
+    Args:
+        self (Task): The Celery task instance.
+        crca_data_json (dict): Data to perform crca on.
+        crca_info (dict): Information required for crca.
+
+    Returns:
+        None
+    """
+    try:
+        crca_data = pd.read_json(crca_data_json, orient='split')
+        task_id = self.request.id
+
+        run_crca(crca_data, crca_info, task_id)
+        return "success"
+    except Exception as e:
+        logger.error(e)
+        raise self.retry(exc=e, countdown=60)
 
 
 @app.route('/crca', methods=['POST'])

@@ -1,11 +1,11 @@
 from flask import Flask, request, jsonify
-from celery import Celery
 import logging
 import requests
 import time
 import json
-from kubernetes import client, config
 import traceback
+from celery import Celery
+from kubernetes import client, config
 from flask_cors import CORS
 
 from data_collector import collect_crca_data, fetch_metrics
@@ -15,7 +15,7 @@ from config import set_initial_metric_config, get_config, set_config
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Configure Celery
+# Configure and initialize Celery
 app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/0'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/0'
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Command to run the Celery worker:
-# celery -A app_1.celery worker --loglevel=info
+# celery -A app.celery worker --loglevel=info
 
 
 @celery.task(bind=True)

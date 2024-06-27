@@ -16,9 +16,10 @@ spec:
       containers:
       - name: learning-adaptation-celery
         image: jojojochem/learning_adaptation:latest
-        command: ["celery", "-A", "tasks", "worker", "--loglevel=info"]
+        command: ["celery", "-A", "app.celery", "worker", "--loglevel=info"]
         env:
         - name: CELERY_BROKER_URL
           value: "redis://redis:6379/2"
         - name: CELERY_RESULT_BACKEND
           value: "redis://redis:6379/2"
+        imagePullPolicy: Always

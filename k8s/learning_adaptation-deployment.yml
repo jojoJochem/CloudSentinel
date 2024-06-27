@@ -23,6 +23,7 @@ spec:
           value: "redis://redis:6379/2"
         - name: CELERY_RESULT_BACKEND
           value: "redis://redis:6379/2"
+        imagePullPolicy: Always
 ---
 apiVersion: v1
 kind: Service
