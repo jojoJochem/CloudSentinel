@@ -91,6 +91,6 @@ jobs:
         kubectl patch deployment crca-anomaly-detection-celery-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
         kubectl patch deployment cgnn-anomaly-detection-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
         kubectl patch deployment learning-adaptation-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
-        kuberts patch deployment learning-adaptation-celery-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
+        kubectl patch deployment learning-adaptation-celery-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
         kubectl patch deployment monitoring-project-deployment -n cloudsentinel -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"`date +'%s'`\"}}}}}"
 
