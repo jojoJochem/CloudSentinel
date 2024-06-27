@@ -83,3 +83,4 @@ jobs:
         kubectl apply -f k8s/learning_adaptation-celery-deployment.yml
         kubectl apply -f k8s/crca_anomaly_detection-celery-deployment.yml
         kubectl apply -f k8s/monitoring_project-deployment.yml
+        kubectl -n cloudsentinel rollout restart deploy

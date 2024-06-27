@@ -162,7 +162,8 @@ def get_pod_names():
     try:
         namespace = request.json['namespace']
         v1 = client.CoreV1Api()
-        ret = v1.list_pod_for_all_namespaces(namespace, watch=False)
+        ret = v1.list_namespaced_pod(namespace, watch=False)
+        # ret = v1.list_pod_for_all_namespaces(watch=False)
         pod_names = [item.metadata.name for item in ret.items]
         logger.info(f"Retrieved pod names for namespace {namespace}")
         return jsonify(pod_names), 200
