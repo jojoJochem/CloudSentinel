@@ -4,8 +4,14 @@ from django.conf import settings
 from requests.exceptions import RequestException
 import json
 import requests
+import logging
+import traceback
 
 from .utils import get_config, get_settings, get_metrics
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 def train_algorithms(request):
@@ -18,6 +24,7 @@ def train_algorithms(request):
     Returns:
         HttpResponse: The rendered training algorithms home page.
     """
+    logger.info("Rendering training algorithms home page")
     return render(request, 'config_app/training/train_algorithms_home.html')
 
 
@@ -31,6 +38,7 @@ def train_cgnn(request):
     Returns:
         HttpResponse: The rendered CGNN training home page with config data.
     """
+    logger.info("Fetching CGNN training configuration")
     config_data = get_config(settings.API_LEARNING_ADAPTATION_URL)
     return render(request, 'config_app/training/cgnn_train_home.html', {'config': config_data})
 
@@ -64,21 +72,25 @@ def cgnn_train_data(request):
         }
         train_info_json = json.dumps(train_info)
         try:
+            logger.info("Submitting CGNN training data")
             response = requests.post(settings.API_LEARNING_ADAPTATION_URL + '/cgnn_train_with_existing_dataset',
                                      data={'train_info': train_info_json})
             response.raise_for_status()
             response_data = response.json()
             task_id = response_data.get('task_id')
+            logger.info(f"CGNN training task {task_id} started")
             return render(request, 'config_app/waiting_page.html', {'task_id': task_id,
                                                                     'api_url': settings.API_LEARNING_ADAPTATION_URL,
                                                                     'task_type': 'training'})
         except RequestException as e:
+            logger.error(f"Failed to train CGNN: {traceback.format_exc()}")
             messages.error(request, f'Failed to train CGNN: {str(e)}')
             return redirect('cgnn_train_data')
 
     datasets = []
 
     try:
+        logger.info("Fetching available datasets for CGNN training")
         response = requests.get(settings.API_LEARNING_ADAPTATION_URL + '/get_available_datasets')
         response.raise_for_status()
         details = response.json()
@@ -88,7 +100,9 @@ def cgnn_train_data(request):
                 'data': value
             })
         datasets_json = json.dumps(datasets)
+        logger.info("Available datasets retrieved successfully")
     except RequestException as e:
+        logger.error(f"Failed to get available datasets: {traceback.format_exc()}")
         messages.error(request, f'Failed to get available datasets: {str(e)}')
         datasets_json = json.dumps(datasets)
 
@@ -141,17 +155,21 @@ def upload_cgnn_train_data(request):
         }
         train_info_json = json.dumps(train_info)
         try:
+            logger.info("Uploading CGNN training data")
             response = requests.post(f'{settings.API_DATA_PROCESSING_URL}/preprocess_cgnn_train_data',
                                      files=train_files, data={'train_info': train_info_json})
             response.raise_for_status()
             response_data = response.json()
             task_id = response_data.get('task_id')
+            logger.info(f"CGNN training task {task_id} started")
             return render(request, 'config_app/waiting_page.html', {'task_id': task_id,
                                                                     'api_url': settings.API_LEARNING_ADAPTATION_URL,
                                                                     'task_type': 'training'})
         except RequestException as e:
+            logger.error(f"Failed to train CGNN: {traceback.format_exc()}")
             messages.error(request, f'Failed to train CGNN: {str(e)}')
             return redirect('train_cgnn')
 
     metrics = get_metrics()
+    logger.info("Rendering CGNN training data upload page")
     return render(request, 'config_app/training/cgnn_upload_train_data.html', {'metrics': metrics})

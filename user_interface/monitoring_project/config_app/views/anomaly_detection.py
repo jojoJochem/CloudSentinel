@@ -6,9 +6,14 @@ from django.conf import settings
 from requests.exceptions import RequestException
 from io import StringIO
 import json
+import logging
+import traceback
 
 from .utils import get_config, get_pods, get_available_models, get_settings, get_metrics
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def home_anomaly_detection(request):
     """
@@ -20,6 +25,7 @@ def home_anomaly_detection(request):
     Returns:
         HttpResponse: The rendered home anomaly detection page.
     """
+    logger.info("Rendering home anomaly detection page")
     return render(request, 'config_app/anomaly_detection/home_anomaly_detection.html')
 
 
@@ -33,6 +39,7 @@ def perform_anomaly_detection_cgnn(request):
     Returns:
         HttpResponse: The rendered CGNN anomaly detection configuration page.
     """
+    logger.info("Fetching CGNN anomaly detection configuration")
     config_data = get_config(settings.API_CGNN_ANOMALY_DETECTION_URL)
     return render(request, 'config_app/anomaly_detection/cgnn/cgnn_anomaly_detection_home.html', {'config': config_data})
 
@@ -47,6 +54,7 @@ def perform_anomaly_detection_crca(request):
     Returns:
         HttpResponse: The rendered CRCA anomaly detection configuration page.
     """
+    logger.info("Fetching CRCA anomaly detection configuration")
     config_data = get_config(settings.API_CRCA_ANOMALY_DETECTION_URL)
     return render(request, 'config_app/anomaly_detection/crca/crca_anomaly_detection_home.html', {'config': config_data})
 
@@ -63,11 +71,14 @@ def select_crca_file(request):
     """
     pod_names_url = get_pods(settings.CLUSTER_NAMESPACE)
     try:
+        logger.info("Retrieving pod names")
         response = requests.get(pod_names_url)
         response.raise_for_status()
         pod_names_data = response.json()
+        logger.info("Pod names retrieved successfully")
     except RequestException as e:
         pod_names_data = []
+        logger.error(f"Failed to retrieve pod names: {traceback.format_exc()}")
         messages.error(request, f'Failed to retrieve pod names: {str(e)}')
     return render(request, 'config_app/anomaly_detection/crca/crca_select_file.html', {'pod_names': pod_names_data})
 
@@ -93,6 +104,7 @@ def chosen_crca(request):
             'end_datetime': end_datetime
         }
         try:
+            logger.info("Sending CRCA data for processing")
             response = requests.post(f'{settings.API_DATA_PROCESSING_URL}/crca_uploaded_by_user', json=data)
             response.raise_for_status()
             response_data = response.json()
@@ -104,8 +116,10 @@ def chosen_crca(request):
                 'graph_images': graph_images,
                 'csv_data': csv_df.to_html(classes='table table-striped', index=False)
             }
+            logger.info("CRCA data processed successfully")
             return render(request, 'config_app/anomaly_detection/crca/display_crca_response.html', context)
         except requests.RequestException as e:
+            logger.error(f"Failed to process CRCA data: {traceback.format_exc()}")
             messages.error(request, f'Failed to process data: {str(e)}')
             return redirect('select_crca_file')
     return redirect('select_crca_file')
@@ -121,6 +135,7 @@ def upload_cgnn_data(request):
     Returns:
         HttpResponse: The rendered page to upload CGNN data with results.
     """
+    logger.info("Fetching available models for CGNN anomaly detection")
     models = get_available_models(settings.API_CGNN_ANOMALY_DETECTION_URL)
     selected_model = None
     result = None
@@ -135,11 +150,14 @@ def upload_cgnn_data(request):
         test_info_json = json.dumps(test_info)
         if selected_model and data_file:
             try:
+                logger.info("Uploading CGNN data for anomaly detection")
                 response = requests.post(f'{settings.API_DATA_PROCESSING_URL}/preprocess_cgnn_data',
                                          files={'test_array': data_file}, data={'test_info': test_info_json})
                 response.raise_for_status()
                 result = response.json()
+                logger.info("CGNN anomaly detection performed successfully")
             except requests.RequestException as e:
+                logger.error(f"Failed to perform CGNN anomaly detection: {traceback.format_exc()}")
                 messages.error(request, f'Failed to perform anomaly detection: {str(e)}')
 
     context = {
@@ -176,18 +194,23 @@ def upload_crca_data(request):
         }
         crca_info_json = json.dumps(crca_info)
         try:
+            logger.info("Uploading CRCA data for processing")
             response = requests.post(f'{settings.API_DATA_PROCESSING_URL}/preprocess_crca_data',
                                      files={'crca_file': crca_file}, data={'crca_info': crca_info_json})
+            response.raise_for_status()
             response_data = response.json()
             task_id = response_data.get('task_id')
+            logger.info("CRCA data uploaded successfully")
 
             return render(request, 'config_app/waiting_page.html', {'task_id': task_id,
                                                                     'api_url': settings.API_CRCA_ANOMALY_DETECTION_URL,
                                                                     'task_type': 'crca'})
 
         except RequestException as e:
+            logger.error(f"Failed to upload CRCA file: {traceback.format_exc()}")
             messages.error(request, f'Failed to upload file: {str(e)}')
             return redirect('home')
 
     metrics = get_metrics()
+    logger.info("Rendering CRCA data upload page")
     return render(request, 'config_app/anomaly_detection/crca/crca_upload_data.html', {'metrics': metrics})
