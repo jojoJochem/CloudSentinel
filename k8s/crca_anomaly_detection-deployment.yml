@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: crca-anomaly-detection
-        image: jojojochem/anomaly_detection_crca:latest
+        image: jojojochem/anomaly_detection_crca:${COMMIT_SHA}
         imagePullPolicy: Always
         ports:
         - containerPort: 5023

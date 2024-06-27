@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: monitoring-project
-        image: jojojochem/monitoring_project:latest
+        image: jojojochem/monitoring_project:${COMMIT_SHA}
         imagePullPolicy: Always
         ports:
         - containerPort: 8000

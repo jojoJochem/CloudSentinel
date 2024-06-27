@@ -16,7 +16,7 @@ spec:
       serviceAccountName: data-ingestion-sa  # Ensure this is set correctly
       containers:
       - name: data-ingestion
-        image: jojojochem/data_ingestion:latest
+        image: jojojochem/data_ingestion:${COMMIT_SHA}
         imagePullPolicy: Always
         ports:
         - containerPort: 5001
