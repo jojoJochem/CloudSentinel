@@ -30,16 +30,16 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const flaskUrl = "{{ flask_url|safe }}";
+        const fetchResultsUrl = "{% url 'fetch_cgnn_results' %}";
+        const fetchCrcaTaskDetailsUrl = "{% url 'fetch_crca_task_details' %}";
         let chartInstance = null;
         let allResults = {};
 
         async function fetchResults() {
-            const response = await fetch(`${flaskUrl}/get_all_results`, {
+            const response = await fetch(fetchResultsUrl, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'Content-Type': 'application/json'
                 }
             });
             if (!response.ok) {
@@ -123,11 +123,10 @@
         }
 
         async function fetchAndDisplayCrcaTaskDetails(taskId) {
-            const response = await fetch(`${flaskUrl}/results/${taskId}`, {
+            const response = await fetch(`${fetchCrcaTaskDetailsUrl}?task_id=${taskId}`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'Content-Type': 'application/json'
                 }
             });
             if (!response.ok) {
@@ -237,37 +236,22 @@
 
         updateDashboard();
     });
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
 </script>
 
 <style>
-    .sidebar-link {
-        transition: background-color 0.3s ease, color 0.3s ease;
-    }
-    .sidebar-link:hover {
-        background-color: #f0f0f0 !important;
-        color: #000000 !important;
-        text-decoration: none !important;
-        font-weight: bold !important;
-    }
-    .text-center img {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-    }
+.sidebar-link {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.sidebar-link:hover {
+    background-color: #f0f0f0 !important;
+    color: #000000 !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+}
+.text-center img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
 </style>
 {% endblock %}

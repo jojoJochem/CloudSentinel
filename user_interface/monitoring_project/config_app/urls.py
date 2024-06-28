@@ -6,7 +6,8 @@ from .views.anomaly_detection import (home_anomaly_detection, perform_anomaly_de
                                       select_crca_file, chosen_crca, upload_cgnn_data, upload_crca_data)
 from .views.monitoring import monitoring, monitoring_home, monitoring_overview, task_manager
 from .views.api import get_settings
-from .views.task_results import get_results, training_result
+from .views.task_results import (get_results, training_result, fetch_cgnn_results, fetch_crca_task_details,
+                                 fetch_active_tasks, stop_task, fetch_results, delete_result, check_status)
 
 urlpatterns = [
     path('', home, name='home'),
@@ -38,5 +39,13 @@ urlpatterns = [
     path('task_manager/', task_manager, name='task_manager'),
 
     path('api/settings/', get_settings, name='get_settings'),
+    path('check_status/<str:task_id>/', check_status, name='check_status'),
 
+    path('fetch_cgnn_results/', fetch_cgnn_results, name='fetch_cgnn_results'),
+    path('fetch_crca_task_details/', fetch_crca_task_details, name='fetch_crca_task_details'),
+
+    path('fetch_active_tasks/', fetch_active_tasks, name='fetch_active_tasks'),
+    path('stop_task/', stop_task, name='stop_task'),
+    path('fetch_results/', fetch_results, name='fetch_results'),
+    path('delete_result/', delete_result, name='delete_result'),
 ]

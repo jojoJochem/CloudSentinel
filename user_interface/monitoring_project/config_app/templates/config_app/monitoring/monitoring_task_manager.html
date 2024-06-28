@@ -19,8 +19,8 @@
 
 {% block extra_scripts %}
 <script>
-    const dataIngestionUrl = "{{ data_ingestion_url|safe }}";
-    const cgnnUrl = "{{ cgnn_url|safe }}";
+    const dataIngestionUrl = "{% url 'fetch_active_tasks' %}";
+    const cgnnUrl = "{% url 'fetch_results' %}";
     const crcaUrl = "{{ crca_url|safe }}";
     let activeTasks = {};
 
@@ -31,19 +31,16 @@
 
     async function fetchActiveTasks() {
         try {
-            console.log(`Fetching active tasks from ${dataIngestionUrl}/get_active_tasks`);
-            const response = await fetch(`${dataIngestionUrl}/get_active_tasks`, {
+            const response = await fetch(dataIngestionUrl, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'Content-Type': 'application/json'
                 }
             });
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             const data = await response.json();
-            console.log('Active tasks:', data);
             activeTasks = data;
             populateActiveTasksList();
         } catch (error) {
@@ -78,12 +75,12 @@
     }
 
     async function stopTask(taskId) {
-        const response = await fetch(`${dataIngestionUrl}/stop_monitoring/${taskId}`, {
+        const response = await fetch(`{% url 'stop_task' %}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            }
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ task_id: taskId })  // Send data in the request body
         });
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -95,19 +92,16 @@
 
     async function fetchResults() {
         try {
-            console.log(`Fetching results from ${cgnnUrl}/get_all_results`);
-            const response = await fetch(`${cgnnUrl}/get_all_results`, {
+            const response = await fetch(cgnnUrl, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'Content-Type': 'application/json'
                 }
             });
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             const data = await response.json();
-            console.log('Results:', data);
             populateResultsList(data);
         } catch (error) {
             console.error('Failed to fetch results:', error);
@@ -178,13 +172,12 @@
     }
 
     async function deleteResult(taskId) {
-        const response = await fetch(`${cgnnUrl}/delete_results`, {
+        const response = await fetch(`{% url 'delete_result' %}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ taskId: taskId, crcaLink: crcaUrl }) // Send data in the request body
+            body: JSON.stringify({ task_id: taskId, crca_url: crcaUrl })  // Send data in the request body
         });
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -192,21 +185,6 @@
         const result = await response.json();
         alert(result.success);
         fetchResults();
-    }
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
     }
 
 </script>

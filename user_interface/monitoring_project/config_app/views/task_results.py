@@ -7,6 +7,7 @@ from django.conf import settings
 from requests.exceptions import RequestException
 from io import StringIO
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 import logging
 import traceback
 
@@ -15,6 +16,7 @@ from .utils import get_settings
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
 
 def get_results(request, task_id, task_type):
     """
@@ -130,3 +132,82 @@ def training_result(request):
     except RequestException as e:
         logger.error(f"Failed to fetch available models: {traceback.format_exc()}")
         return JsonResponse({'status': 'error', 'message': str(e)})
+
+
+@csrf_exempt
+def check_status(request, task_id, task_type):
+    try:
+        if task_type == 'crca':
+            response = requests.get(f'{settings.API_CRCA_ANOMALY_DETECTION_URL}/get_status/{task_id}')
+        elif task_type == 'training':
+            response = requests.get(f'{settings.API_LEARNING_ADAPTATION_URL}/get_status/{task_id}')
+        response.raise_for_status()
+        return JsonResponse(response.json())
+    except requests.RequestException as e:
+        return JsonResponse({'state': 'FAILURE', 'status': str(e)}, status=500)
+
+
+@csrf_exempt
+def fetch_active_tasks(request):
+    try:
+        response = requests.get(f'{settings.API_DATA_INGESTION_URL}/get_active_tasks')
+        response.raise_for_status()
+        return JsonResponse(response.json())
+    except requests.RequestException as e:
+        return JsonResponse({'state': 'FAILURE', 'status': str(e)}, status=500)
+
+
+@csrf_exempt
+def stop_task(request):
+    try:
+        data = json.loads(request.body)
+        task_id = data['task_id']
+        response = requests.delete(f'{settings.API_DATA_INGESTION_URK}/stop_monitoring/{task_id}')
+        response.raise_for_status()
+        return JsonResponse(response.json())
+    except requests.RequestException as e:
+        return JsonResponse({'state': 'FAILURE', 'status': str(e)}, status=500)
+
+
+@csrf_exempt
+def fetch_results(request):
+    try:
+        response = requests.get(f'{settings.API_CGNN_ANOMALY_DETECTION_URL}/get_all_results')
+        response.raise_for_status()
+        return JsonResponse(response.json())
+    except requests.RequestException as e:
+        return JsonResponse({'state': 'FAILURE', 'status': str(e)}, status=500)
+
+
+@csrf_exempt
+def delete_result(request):
+    try:
+        data = json.loads(request.body)
+        task_id = data['task_id']
+        crca_url = data['crca_url']
+        response = requests.post(f'{settings.API_CGNN_ANOMALY_DETECTION_URL}/delete_results', json={'taskId': task_id, 'crcaLink': crca_url})
+        response.raise_for_status()
+        return JsonResponse(response.json())
+    except requests.RequestException as e:
+        return JsonResponse({'state': 'FAILURE', 'status': str(e)}, status=500)
+
+
+@csrf_exempt
+def fetch_cgnn_results(request):
+    try:
+        response = requests.get(f'{settings.API_CGNN_ANOMALY_DETECTION_URL}/get_all_results')
+        response.raise_for_status()
+        return JsonResponse(response.json())
+    except requests.RequestException as e:
+        return JsonResponse({'state': 'FAILURE', 'status': str(e)}, status=500)
+
+
+@csrf_exempt
+def fetch_crca_task_details(request):
+    task_id = request.GET.get('task_id')
+    try:
+        response = requests.get(f'{settings.API_CRCA_ANOMALY_DETECTION_URL}/results/{task_id}')
+        response.raise_for_status()
+        return JsonResponse(response.json())
+    except requests.RequestException as e:
+        return JsonResponse({'state': 'FAILURE', 'status': str(e)}, status=500)
