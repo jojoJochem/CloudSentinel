@@ -4,7 +4,7 @@ metadata:
   name: learning-adaptation-celery-deployment
   namespace: cloudsentinel
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: learning-adaptation-celery

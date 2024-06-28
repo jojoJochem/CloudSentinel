@@ -4,7 +4,7 @@ metadata:
   name: crca-anomaly-detection-celery-deployment
   namespace: cloudsentinel
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: crca-anomaly-detection-celery
