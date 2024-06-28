@@ -39,7 +39,7 @@ urlpatterns = [
     path('task_manager/', task_manager, name='task_manager'),
 
     path('api/settings/', get_settings, name='get_settings'),
-    path('check_status/<str:task_id>/', check_status, name='check_status'),
+    path('check_status/<task_id>/<task_type>', check_status, name='check_status'),
 
     path('fetch_cgnn_results/', fetch_cgnn_results, name='fetch_cgnn_results'),
     path('fetch_crca_task_details/', fetch_crca_task_details, name='fetch_crca_task_details'),
