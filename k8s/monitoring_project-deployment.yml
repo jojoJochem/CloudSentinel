@@ -4,7 +4,7 @@ metadata:
   name: monitoring-project-deployment
   namespace: cloudsentinel
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: monitoring-project
