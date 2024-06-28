@@ -19,6 +19,9 @@ from cgnn.evaluate_prediction import predict_and_evaluate
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+# Set the environment variable
+os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+
 # Configure and initialize Celery
 app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/2'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/2'
@@ -30,7 +33,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Command to run the Celery worker:
-# celery -A app.celery worker --loglevel=info
+# celery -A app.celery worker --loglevel=info -P gevent
 
 
 @celery.task(bind=True)
@@ -276,7 +279,7 @@ def update_config():
     try:
         set_config(new_config)
         logger.info("Configuration updated successfully")
-        return jsonify({"success"}), 200
+        return jsonify("success"), 200
     except Exception as e:
         logger.error(f"Error updating configuration: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500

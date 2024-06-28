@@ -11,3 +11,4 @@ tqdm==4.66.4
 scipy==1.13.1
 matplotlib==3.9.0
 redis==5.0.5
+gevent==24.2.1

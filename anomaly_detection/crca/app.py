@@ -56,7 +56,7 @@ def run_crca_task(self, crca_data_json, crca_info):
         run_crca(crca_data, crca_info, task_id)
         return "success"
     except Exception as e:
-        logger.error(e)
+        logger.error(traceback.format_exc())
         raise self.retry(exc=e, countdown=60)
 
 

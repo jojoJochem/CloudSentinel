@@ -156,7 +156,7 @@ def update_config():
     try:
         logger.info("Updating configuration")
         set_config(new_config)
-        return jsonify({"success"}), 200
+        return jsonify("success"), 200
     except Exception as e:
         logger.error(f"Error in update_config: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
