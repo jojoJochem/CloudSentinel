@@ -1,16 +1,13 @@
 {
   "anomaly_sequence": false,
   "comment": "",
-  "containers": [
-    "container_1"
-  ],
   "data_entries": 2987,
   "dataset": "SMD 1-1",
   "duration": 60000,
   "metrics": [
     "cpu_usage_pods", "memory_usage_pods", "cpu_limit_pods", "memory_limit_pods", "cpu_requests_pods", "memory_requests_pods", "cpu_usage_pods", "pod_restarts", "pod_status_running", "pod_status_pending", "pod_status_failed",
-    "pod_status_succeeded", "disk_io_operations", "network_io_bytes_received", "network_io_bytes_transmitted", "pod_evictions", "pod_uptime", "pods_by_node", "pod_cpu_throttling", "pod_oom_kills", "pod_read_bytes", "pod_write_bytes",
-    "pod_log_size", "pod_fs_inodes_free", "pod_fs_inodes_total", "pod_fs_inodes_used", "pod_disk_space_available", "pod_network_errors"
+    "pod_status_succeeded", "disk_io_operations", "network_io_bytes_received", "network_io_bytes_transmitted", "pod_evictions", "pod_uptime", "pods_by_node", "pod_cpu_throttling"
   ],
+  "containers": ["container_1", "container_2"],
   "step_size": 60
 }

@@ -56,11 +56,13 @@ def fetch_metrics(pod_names, metric_queries, start_time, end_time, url, step=60)
     )
     master_df = pd.DataFrame(all_timestamps, columns=['timestamp'])
     metrics_config = get_config()
+    successful_queries = []
     for pod in pod_names:
         for metric in metric_queries:
             query = metrics_config[metric]['query'].format(pod=pod)
             results = query_prometheus(query, start_time, end_time, url, step)
             if results:
+                successful_queries.append((pod, metric))
                 timestamps = [pd.Timestamp.fromtimestamp(int(value[0])) for value in results[0]['values']]
                 measures = [float(value[1]) for value in results[0]['values']]
                 metric_df = pd.DataFrame({
@@ -68,7 +70,7 @@ def fetch_metrics(pod_names, metric_queries, start_time, end_time, url, step=60)
                     f"{pod}_{metric}": measures
                 })
                 master_df = pd.merge(master_df, metric_df, on='timestamp', how='left')
-
+    logging.info(f"Successful queries: {successful_queries}")
     # Fill missing data
     master_df.ffill(inplace=True)
     master_df.bfill(inplace=True)
