@@ -35,7 +35,8 @@
             const response = await fetch(`${dataIngestionUrl}/get_active_tasks`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
                 }
             });
             if (!response.ok) {
@@ -80,7 +81,8 @@
         const response = await fetch(`${dataIngestionUrl}/stop_monitoring/${taskId}`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
             }
         });
         if (!response.ok) {
@@ -97,7 +99,8 @@
             const response = await fetch(`${cgnnUrl}/get_all_results`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
                 }
             });
             if (!response.ok) {
@@ -178,7 +181,8 @@
         const response = await fetch(`${cgnnUrl}/delete_results`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
             },
             body: JSON.stringify({ taskId: taskId, crcaLink: crcaUrl }) // Send data in the request body
         });
@@ -188,6 +192,21 @@
         const result = await response.json();
         alert(result.success);
         fetchResults();
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
 </script>
