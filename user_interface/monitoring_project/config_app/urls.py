@@ -45,7 +45,7 @@ urlpatterns = [
     path('fetch_crca_task_details/', fetch_crca_task_details, name='fetch_crca_task_details'),
 
     path('fetch_active_tasks/', fetch_active_tasks, name='fetch_active_tasks'),
-    path('stop_task/', stop_task, name='stop_task'),
+    path('stop_task/<taskId>', stop_task, name='stop_task'),
     path('fetch_results/', fetch_results, name='fetch_results'),
-    path('delete_result/', delete_result, name='delete_result'),
+    path('delete_result/<taskId>/<crcaUrl>', delete_result, name='delete_result'),
 ]
