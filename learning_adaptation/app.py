@@ -8,7 +8,7 @@ import torch
 import shutil
 import pandas as pd
 import numpy as np
-from celery import Celery
+from celery import Celery, Task
 from flask_cors import CORS
 
 from cgnn.config import set_config, get_config, set_initial_config
@@ -25,15 +25,37 @@ os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 # Configure and initialize Celery
 app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/2'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/2'
+
+
+class CustomTask(Task):
+    autoretry_for = (Exception,)
+    retry_kwargs = {'max_retries': 5, 'countdown': 60}
+    time_limit = 7200  # Set a time limit of 2 hours for tasks
+    soft_time_limit = 7000  # Soft time limit to trigger a graceful timeout
+
+
 celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'], broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
+celery.Task = CustomTask
+
+celery.conf.update(
+    worker_prefetch_multiplier=1,  # To prevent Celery from prefetching too many tasks
+    task_acks_late=True,  # Acknowledge tasks only after they have been completed
+    broker_heartbeat=0,  # Disable heartbeat to prevent broker disconnections
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Command to run the Celery worker:
-# celery -A app.celery worker --loglevel=info -P gevent
+
+# Health check endpoint for Kubernetes liveness and readiness probes
+@app.route('/healthz', methods=['GET'])
+def health_check():
+    """
+    Health check endpoint for Kubernetes liveness and readiness probes.
+    """
+    return jsonify({"status": "healthy"}), 200
 
 
 @celery.task(bind=True)

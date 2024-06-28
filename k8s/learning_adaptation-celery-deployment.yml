@@ -23,3 +23,22 @@ spec:
           value: "redis://redis:6379/2"
         - name: CELERY_RESULT_BACKEND
           value: "redis://redis:6379/2"
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5005
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 5005
+          initialDelaySeconds: 30
+          periodSeconds: 10
