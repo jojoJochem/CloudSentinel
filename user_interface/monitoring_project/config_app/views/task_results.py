@@ -162,7 +162,7 @@ def stop_task(request):
     try:
         data = json.loads(request.body)
         task_id = data['task_id']
-        response = requests.delete(f'{settings.API_DATA_INGESTION_URK}/stop_monitoring/{task_id}')
+        response = requests.delete(f'{settings.API_DATA_INGESTION_URL}/stop_monitoring/{task_id}')
         response.raise_for_status()
         return JsonResponse(response.json())
     except requests.RequestException as e:
