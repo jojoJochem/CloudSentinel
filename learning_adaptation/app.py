@@ -8,12 +8,11 @@ import torch
 import shutil
 import pandas as pd
 import numpy as np
-from celery import Celery, Task
 from flask_cors import CORS
+from celery import Celery
+from tasks import train_and_evaluate_task  # Import the task
 
 from cgnn.config import set_config, get_config, set_initial_config
-from cgnn.train import train
-from cgnn.evaluate_prediction import predict_and_evaluate
 
 # Initialize Flask app and configure CORS
 app = Flask(__name__)
@@ -28,23 +27,8 @@ app.config['result_backend'] = 'redis://redis:6379/2'
 # app.config['broker_url'] = 'redis://localhost:6379/2'
 # app.config['result_backend'] = 'redis://localhost:6379/2'
 
-
-class CustomTask(Task):
-    autoretry_for = (Exception,)
-    retry_kwargs = {'max_retries': 5, 'countdown': 60}
-    time_limit = 7200
-    soft_time_limit = 7000
-
-
 celery = Celery(app.import_name, backend=app.config['result_backend'], broker=app.config['broker_url'])
 celery.conf.update(app.config)
-celery.Task = CustomTask
-
-celery.conf.update(
-    worker_prefetch_multiplier=1,
-    task_acks_late=True,
-    broker_heartbeat=0,
-)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -61,49 +45,6 @@ def health_check():
 
 # Command to run the Celery worker:
 # celery -A app.celery worker --loglevel=info -P gevent
-
-
-@celery.task(bind=True)
-def train_and_evaluate_task(self, train_array, test_array, anomaly_label_array, train_info):
-    """
-    Celery task to train and evaluate a CGNN model.
-
-    Args:
-        self (Task): The Celery task instance.
-        train_array (list): Training data array.
-        test_array (list): Testing data array.
-        anomaly_label_array (list): Anomaly label array.
-        train_info (dict): Training information and settings.
-
-    Returns:
-        str: Success message if training is completed successfully.
-
-    Raises:
-        Exception: Retries the task if an exception occurs.
-    """
-    try:
-        logger.info("Starting the training process.")
-        model, model_config = train(train_info['data'], np.array(train_array, dtype=np.float32),
-                                    np.array(test_array, dtype=np.float32), np.array(anomaly_label_array, dtype=np.float32))
-        logger.info("Training completed.")
-
-        logger.info("Starting the evaluation process.")
-        predict_and_evaluate(model_config, model, np.array(train_array, dtype=np.float32),
-                             np.array(test_array, dtype=np.float32), np.array(anomaly_label_array, dtype=np.float32))
-        logger.info("Evaluation completed.")
-
-        # Create directory for saving model parameters
-        model_dir = f"trained_models_temp/{model_config['dataset']}_{model_config['id']}"
-        os.makedirs(model_dir, exist_ok=True)
-
-        # Save model parameters to JSON file
-        with open(f"{model_dir}/model_params.json", "w") as f:
-            json.dump(train_info['data'], f, indent=2)
-
-        return "Training Successful"
-    except Exception as e:
-        logger.error(traceback.format_exc())
-        raise self.retry(exc=e, countdown=60)
 
 
 @app.route('/cgnn_train_model', methods=['POST'])
