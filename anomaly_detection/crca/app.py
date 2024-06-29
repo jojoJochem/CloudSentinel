@@ -227,4 +227,4 @@ if __name__ == '__main__':
     logger.info("Initializing configuration")
     set_initial_config()
     logger.info("Starting Flask app")
-    app.run(debug=True, host='0.0.0.0', port=5023)
+    app.run(debug=False, host='0.0.0.0', port=5023)

@@ -23,13 +23,13 @@ spec:
           value: "redis://redis:6379/2"
         - name: CELERY_RESULT_BACKEND
           value: "redis://redis:6379/2"
-        resources:
-          requests:
-            memory: "4Gi"
-            cpu: "2"
-          limits:
-            memory: "8Gi"
-            cpu: "4"
+        # resources:
+        #   requests:
+        #     memory: "4Gi"
+        #     cpu: "2"
+        #   limits:
+        #     memory: "8Gi"
+        #     cpu: "4"
         livenessProbe:
           httpGet:
             path: /healthz

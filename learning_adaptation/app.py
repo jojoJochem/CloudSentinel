@@ -30,8 +30,8 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/2'
 class CustomTask(Task):
     autoretry_for = (Exception,)
     retry_kwargs = {'max_retries': 5, 'countdown': 60}
-    time_limit = 7200  # Set a time limit of 2 hours for tasks
-    soft_time_limit = 7000  # Soft time limit to trigger a graceful timeout
+    time_limit = 7200
+    soft_time_limit = 7000
 
 
 celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'], broker=app.config['CELERY_BROKER_URL'])
@@ -39,9 +39,9 @@ celery.conf.update(app.config)
 celery.Task = CustomTask
 
 celery.conf.update(
-    worker_prefetch_multiplier=1,  # To prevent Celery from prefetching too many tasks
-    task_acks_late=True,  # Acknowledge tasks only after they have been completed
-    broker_heartbeat=0,  # Disable heartbeat to prevent broker disconnections
+    worker_prefetch_multiplier=1,
+    task_acks_late=True,
+    broker_heartbeat=0,
 )
 
 # Configure logging
@@ -354,4 +354,4 @@ def get_available_datasets():
 if __name__ == '__main__':
     set_initial_config()
     logger.info("Starting Flask app")
-    app.run(debug=True, host='0.0.0.0', port=5005)
+    app.run(debug=False, host='0.0.0.0', port=5005)
