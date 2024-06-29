@@ -16,9 +16,9 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Configure and initialize Celery
-app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/0'
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+app.config['broker_url'] = 'redis://redis:6379/0'
+app.config['result_backend'] = 'redis://redis:6379/0'
+celery = Celery(app.name, broker=app.config['broker_url'])
 celery.conf.update(app.config)
 
 # Configure logging

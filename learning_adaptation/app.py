@@ -23,8 +23,10 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
 # Configure and initialize Celery
-app.config['CELERY_BROKER_URL'] = 'redis://redis:6379/2'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://redis:6379/2'
+app.config['broker_url'] = 'redis://redis:6379/2'
+app.config['result_backend'] = 'redis://redis:6379/2'
+# app.config['broker_url'] = 'redis://localhost:6379/2'
+# app.config['result_backend'] = 'redis://localhost:6379/2'
 
 
 class CustomTask(Task):
@@ -34,7 +36,7 @@ class CustomTask(Task):
     soft_time_limit = 7000
 
 
-celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'], broker=app.config['CELERY_BROKER_URL'])
+celery = Celery(app.import_name, backend=app.config['result_backend'], broker=app.config['broker_url'])
 celery.conf.update(app.config)
 celery.Task = CustomTask
 
@@ -56,6 +58,9 @@ def health_check():
     Health check endpoint for Kubernetes liveness and readiness probes.
     """
     return jsonify({"status": "healthy"}), 200
+
+# Command to run the Celery worker:
+# celery -A app.celery worker --loglevel=info -P gevent
 
 
 @celery.task(bind=True)

@@ -19,6 +19,12 @@ import os
 #     dynamic_config = json.load(config_file)
 # globals().update(dynamic_config)
 # ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
+
+# API_DATA_INGESTION_URL = "http://127.0.0.1:5001"
+# API_DATA_PROCESSING_URL = "http://127.0.0.1:5002"
+# API_CRCA_ANOMALY_DETECTION_URL = "http://127.0.0.1:5023"
+# API_CGNN_ANOMALY_DETECTION_URL = "http://127.0.0.1:5013"
+# API_LEARNING_ADAPTATION_URL = "http://127.0.0.1:5005"
 API_DATA_INGESTION_URL = os.getenv('API_DATA_INGESTION_URL', 'http://data-ingestion-service.cloudsentinel.svc.cluster.local:80')
 API_DATA_PROCESSING_URL = os.getenv('API_DATA_PROCESSING_URL', 'http://data-processing-service.cloudsentinel.svc.cluster.local:80')
 API_CRCA_ANOMALY_DETECTION_URL = os.getenv('API_CRCA_ANOMALY_DETECTION_URL', 'http://crca-anomaly-detection-service.cloudsentinel.svc.cluster.local:80')

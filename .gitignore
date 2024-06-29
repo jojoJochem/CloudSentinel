@@ -8,7 +8,7 @@
 /data_ingestion/prometheus_setup
 /anomaly_detection/cgnn/env_cgnn
 /anomaly_detection/crca/env_CRCA
-/data_processing/env_processing
+/data_processing/env_data_processing
 /learning_adaptation/env_adaptation
 /user_interface/monitoring_project/env_django
 /_data
