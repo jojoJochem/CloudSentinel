@@ -6,7 +6,7 @@ from cgnn.mtad_gat import MTAD_GAT
 from cgnn.prediction import Predictor
 
 
-def predict_and_evaluate(model_config, trained_model, train_array, test_array, anomaly_label_array, save_output=True):
+def predict_and_evaluate(model_config, train_array, test_array, anomaly_label_array, save_output=True):
     model_path = f"trained_models_temp/{model_config['dataset']}_{model_config['id']}"
 
     print(f'Using model from {model_path}')
@@ -54,8 +54,7 @@ def predict_and_evaluate(model_config, trained_model, train_array, test_array, a
     )
 
     device = "cuda" if (model_config['use_cuda'] == 'True') and torch.cuda.is_available() else "cpu"
-    # load(model, trained_model, device=device)
-    model.load_state_dict(trained_model)
+    model.load_state_dict(torch.load(model_path+'/model.pt', map_location=device))
     model.to(device)
 
     # # Some suggestions for POT args
@@ -77,7 +76,6 @@ def predict_and_evaluate(model_config, trained_model, train_array, test_array, a
     # reg_level_dict = {"SMAP": 0, "MSL": 0, "SMD-1": 1, "SMD-2": 1, "SMD-3": 1}
     # key = "SMD-" + model_config['group'][0] if model_config['dataset'] == "SMD" else model_config['dataset']
     # reg_level = reg_level_dict[key]
-
 
     level = model_config['level']
     q = model_config['q']

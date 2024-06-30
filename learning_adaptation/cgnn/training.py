@@ -41,8 +41,9 @@ class Trainer:
         use_cuda=True,
         dload="",
         print_every=1,
-        log_tensorboard=True,
+        log_tensorboard=False,
         args_summary="",
+        progress_callback=None
     ):
 
         self.model = model
@@ -59,6 +60,7 @@ class Trainer:
         self.dload = dload
         self.print_every = print_every
         self.log_tensorboard = log_tensorboard
+        self.progress_callback = progress_callback
 
         self.losses = {
             "train_total": [],
@@ -73,7 +75,6 @@ class Trainer:
         if self.device == "cuda":
             self.model.cuda()
 
-
     def fit(self, train_loader, val_loader=None):
         """Train model for self.n_epochs.
         Train and validation (if validation loader given) losses stored in self.losses
@@ -81,7 +82,6 @@ class Trainer:
         :param train_loader: train loader of input data
         :param val_loader: validation loader of input data
         """
-
         init_train_loss = self.evaluate(train_loader)
         print(f"Init total train loss: {init_train_loss[1]:5f}")
 
@@ -97,8 +97,7 @@ class Trainer:
             self.model.train()
             forecast_b_losses = []
 
-            for x, y in tqdm(train_loader):
-
+            for progress, (x, y) in enumerate(tqdm(train_loader)):
                 x = x.to(self.device)
                 y = y.to(self.device)
                 self.optimizer.zero_grad()
@@ -121,22 +120,21 @@ class Trainer:
 
                 forecast_b_losses.append(forecast_loss.item())
 
+                # Update Celery task state
+                if self.progress_callback:
+                    self.progress_callback(epoch, self.n_epochs, progress, len(train_loader))
+
             forecast_b_losses = np.array(forecast_b_losses)
-
             forecast_epoch_loss = np.sqrt((forecast_b_losses ** 2).mean())
-
             total_epoch_loss = forecast_epoch_loss
             self.losses["train_forecast"].append(forecast_epoch_loss)
             self.losses["train_total"].append(total_epoch_loss)
 
-            # Evaluate on validation set
             forecast_val_loss, total_val_loss = "NA", "NA"
             if val_loader is not None:
-
                 forecast_val_loss, total_val_loss = self.evaluate(val_loader)
                 self.losses["val_forecast"].append(forecast_val_loss)
                 self.losses["val_total"].append(total_val_loss)
-
                 if total_val_loss <= self.losses["val_total"][-1]:
                     self.save("model.pt")
 
@@ -147,18 +145,9 @@ class Trainer:
             self.epoch_times.append(epoch_time)
 
             if epoch % self.print_every == 0:
-                s = (
-                    f"[Epoch {epoch + 1}] "
-                    f"forecast_loss = {forecast_epoch_loss:.5f}, "
-                    f"total_loss = {total_epoch_loss:.5f}"
-                )
-
+                s = (f"[Epoch {epoch + 1}] forecast_loss = {forecast_epoch_loss:.5f}, total_loss = {total_epoch_loss:.5f}")
                 if val_loader is not None:
-                    s += (
-                        f" ---- val_forecast_loss = {forecast_val_loss:.5f}, "
-                        f"val_total_loss = {total_val_loss:.5f}"
-                    )
-
+                    s += (f" ---- val_forecast_loss = {forecast_val_loss:.5f}, val_total_loss = {total_val_loss:.5f}")
                 s += f" [{epoch_time:.1f}s]"
                 print(s)
 

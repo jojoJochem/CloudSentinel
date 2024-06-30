@@ -4,15 +4,14 @@ import torch.nn as nn
 import torch
 import os
 
-from cgnn.config import set_initial_config, set_config, get_config
+from cgnn.config import set_config, get_config
 from cgnn.utils import SlidingWindowDataset, create_data_loaders
 from cgnn.mtad_gat import MTAD_GAT
 from cgnn.training import Trainer
 
 
-def train(dataset_config, train_array, test_array, anomaly_label_array):
+def train(dataset_config, train_array, test_array, anomaly_label_array, progress_callback=None):
     id = datetime.now().strftime("%d%m%Y_%H%M%S")
-    set_initial_config()
     set_config(dataset_config)
     config = get_config()
     config['id'] = id
@@ -31,6 +30,10 @@ def train(dataset_config, train_array, test_array, anomaly_label_array):
     save_path = f"trained_models_temp/{config['dataset']}_{id}"
     if not os.path.exists(save_path):
         os.makedirs(save_path)
+
+    log_dir = f'{save_path}/logs'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
     x_train = torch.from_numpy(train_array).float()
     x_test = torch.from_numpy(test_array).float()
@@ -81,7 +84,8 @@ def train(dataset_config, train_array, test_array, anomaly_label_array):
         save_path,
         print_every,
         log_tensorboard,
-        args_summary
+        args_summary,
+        progress_callback
     )
 
     trainer.fit(train_loader, val_loader)

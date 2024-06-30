@@ -95,7 +95,7 @@ def update_config_internal(request, redirect_url):
         if form.is_valid():
             updated_config = {key: form.cleaned_data[key] for key in config_data.keys()}
             with open(config_path, 'w') as config_file:
-                json.dump(updated_config, config_file, indent=4)
+                json.dump(updated_config, config_file, indent=2)
             messages.success(request, 'Config updated successfully!')
             return redirect(redirect_url)
     else:

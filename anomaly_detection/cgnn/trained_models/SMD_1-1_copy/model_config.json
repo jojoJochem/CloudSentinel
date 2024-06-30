@@ -21,7 +21,7 @@
   "dropout": 0.4,
   "use_cuda": true,
   "print_every": 1,
-  "log_tensorboard": true,
+  "log_tensorboard": false,
   "scale_scores": false,
   "use_mov_av": false,
   "gamma": 1,

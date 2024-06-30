@@ -16,7 +16,7 @@
   "init_lr": 0.001,
   "kernel_size": 7,
   "level": null,
-  "log_tensorboard": true,
+  "log_tensorboard": false,
   "lookback": 100,
   "normalize": true,
   "print_every": 1,

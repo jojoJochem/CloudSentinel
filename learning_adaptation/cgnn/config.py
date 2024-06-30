@@ -37,13 +37,13 @@ def set_initial_config():
         "dropout": os.getenv("DROPOUT", 0.4),
         "use_cuda": os.getenv("USE_CUDA", True),
         "print_every": os.getenv("PRINT_EVERY", 1),
-        "log_tensorboard": os.getenv("LOG_TENSORBOARD", True),
+        "log_tensorboard": os.getenv("LOG_TENSORBOARD", False),
         # --- Predictor params ---
         "scale_scores": os.getenv("SCALE_SCORES", False),
         "use_mov_av": os.getenv("USE_MOV_AV", False),
         "gamma": os.getenv("GAMMA", 1),
-        "level": os.getenv("LEVEL", None),
-        "q": os.getenv("Q", None),
+        "level": os.getenv("LEVEL", 0.0),
+        "q": os.getenv("Q", 0.0),
         "reg_level": os.getenv("REG_LEVEL", 1),
 
         "dynamic_pot": os.getenv("DYNAMIC_POT", False),
@@ -52,7 +52,7 @@ def set_initial_config():
         "comment": os.getenv("COMMENT", "")
     }
     with open(config_file_path, 'w') as file:
-        json.dump(config, file)
+        json.dump(config, file, indent=2)
 
 
 def get_config():
@@ -67,6 +67,6 @@ def set_config(new_config=None):
     if new_config:
         config.update(new_config)
     with open(config_file_path, 'w') as file:
-        json.dump(config, file)
+        json.dump(config, file, indent=2)
 
 

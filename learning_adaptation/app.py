@@ -24,6 +24,8 @@ os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 # Configure and initialize Celery
 app.config['broker_url'] = 'redis://redis:6379/2'
 app.config['result_backend'] = 'redis://redis:6379/2'
+
+# testing purposes
 # app.config['broker_url'] = 'redis://localhost:6379/2'
 # app.config['result_backend'] = 'redis://localhost:6379/2'
 
@@ -45,6 +47,7 @@ def health_check():
 
 # Command to run the Celery worker:
 # celery -A app.celery worker --loglevel=info -P gevent
+# celery -A app.celery purge -Q celery --force
 
 
 @app.route('/cgnn_train_model', methods=['POST'])
@@ -87,20 +90,17 @@ def get_status(task_id):
     try:
         task = train_and_evaluate_task.AsyncResult(task_id)
         if task.state == 'PENDING':
-            response = {
-                'state': task.state,
-                'status': 'Pending... (this may take a while)'
-            }
+            response = {'state': task.state, 'status': 'Pending... (this may take a while)'}
+        elif task.state == 'INITIATING':
+            response = {'state': task.state, 'status': task.info}
+        elif task.state == 'TRAINING':
+            response = {'state': task.state, 'status': task.info}
+        elif task.state == 'EVALUATING':
+            response = {'state': task.state, 'status': task.info}
         elif task.state != 'FAILURE':
-            response = {
-                'state': task.state,
-                'status': task.info
-            }
+            response = {'state': task.state, 'status': task.info}
         else:
-            response = {
-                'state': task.state,
-                'status': str(task.info)
-            }
+            response = {'state': task.state, 'status': str(task.info)}
         logger.info(f"Retrieved status for task {task_id}: {response}")
         return jsonify(response)
     except Exception as e:

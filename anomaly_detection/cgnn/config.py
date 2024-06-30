@@ -74,7 +74,7 @@ def set_initial_config():
          "dropout": os.getenv("DROPOUT", 0.4),
          "use_cuda": os.getenv("USE_CUDA", True),
          "print_every": os.getenv("PRINT_EVERY", 1),
-         "log_tensorboard": os.getenv("LOG_TENSORBOARD", True),
+         "log_tensorboard": os.getenv("LOG_TENSORBOARD", False),
          # --- Predictor params ---
          "scale_scores": os.getenv("SCALE_SCORES", False),
          "use_mov_av": os.getenv("USE_MOV_AV", False),
