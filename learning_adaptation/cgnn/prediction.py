@@ -33,6 +33,7 @@ class Predictor:
         self.gamma = pred_args["gamma"]
         self.reg_level = pred_args["reg_level"]
         self.save_path = pred_args["save_path"]
+        self.progress_callback = pred_args["progress_callback"]
         self.batch_size = 256
         self.use_cuda = True  #
         self.pred_args = pred_args
@@ -52,7 +53,8 @@ class Predictor:
         self.model.eval()
         preds = []
         with torch.no_grad():
-            for x, y in tqdm(loader):
+            total_iterations = len(loader)
+            for iteration, (x, y) in enumerate(tqdm(loader)):
                 x = x.to(device)
                 y = y.to(device)
 
@@ -60,6 +62,8 @@ class Predictor:
 
                 preds.append(y_hat.detach().cpu().numpy())
 
+                if self.progress_callback:
+                    self.progress_callback('CALCULATING', '', 0, 2, iteration, total_iterations)
         preds = np.concatenate(preds, axis=0)
         actual = values.detach().cpu().numpy()[self.window_size:]
 
@@ -142,7 +146,7 @@ class Predictor:
             # Global anomalies (entity-level) are predicted using aggregation of anomaly scores across all features
             # These predictions are used to evaluate performance, as true anomalies are labeled at entity-level
             # Evaluate using different threshold methods: brute-force, epsilon and peaks-over-treshold
-            print("voor eval", train_anomaly_scores, test_anomaly_scores, true_anomalies, len(train_anomaly_scores), len(test_anomaly_scores), len(true_anomalies),)
+            print("voor eval", train_anomaly_scores, test_anomaly_scores, true_anomalies, len(train_anomaly_scores), len(test_anomaly_scores), len(true_anomalies))
 
             e_eval = epsilon_eval(train_anomaly_scores, test_anomaly_scores, true_anomalies, reg_level=self.reg_level)
             p_eval = pot_eval(train_anomaly_scores, test_anomaly_scores, true_anomalies,

@@ -29,7 +29,7 @@ def set_initial_config():
         # Other
         "alpha": os.getenv("ALPHA", 0.2),
         # --- Train params ---
-        "epochs": os.getenv("EPOCHS", 10),
+        "epochs": os.getenv("EPOCHS", 1),
         "val_split": os.getenv("VAL_SPLIT", 0.1),
         "bs": os.getenv("BS", 256),
         "init_lr": os.getenv("INIT_LR", 1e-3),
@@ -37,19 +37,19 @@ def set_initial_config():
         "dropout": os.getenv("DROPOUT", 0.4),
         "use_cuda": os.getenv("USE_CUDA", True),
         "print_every": os.getenv("PRINT_EVERY", 1),
-        "log_tensorboard": os.getenv("LOG_TENSORBOARD", False),
+        "log_tensorboard": os.getenv("LOG_TENSORBOARD", True),
+        "feature_importance": os.getenv("FEATURE_IMPORTANCE", False),
         # --- Predictor params ---
         "scale_scores": os.getenv("SCALE_SCORES", False),
         "use_mov_av": os.getenv("USE_MOV_AV", False),
         "gamma": os.getenv("GAMMA", 1),
-        "level": os.getenv("LEVEL", 0.0),
-        "q": os.getenv("Q", 0.0),
+        "level": os.getenv("LEVEL", 0.995),
+        "q": os.getenv("Q", 0.001),
         "reg_level": os.getenv("REG_LEVEL", 1),
-
         "dynamic_pot": os.getenv("DYNAMIC_POT", False),
-
         # --- Other ---
         "comment": os.getenv("COMMENT", "")
+
     }
     with open(config_file_path, 'w') as file:
         json.dump(config, file, indent=2)

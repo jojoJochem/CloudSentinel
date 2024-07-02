@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset, SubsetRandomSampler
+import pandas as pd
+from tqdm import tqdm
 
 
 class SlidingWindowDataset(Dataset):
@@ -17,6 +19,44 @@ class SlidingWindowDataset(Dataset):
 
     def __len__(self):
         return len(self.data) - self.window
+
+
+def permutation_importance(model, loader, criterion, device='cpu', progress_callback=None):
+    model.eval()
+    initial_losses = []
+
+    for x, y in tqdm(loader, desc="Calculating initial loss", leave=False):
+        x, y = x.to(device), y.to(device)
+        with torch.no_grad():
+            preds = model(x).squeeze(1)
+            if preds.shape != y.shape:
+                preds = preds.view_as(y)
+            loss = criterion(preds, y)
+        initial_losses.append(loss.item())
+    initial_loss = np.mean(initial_losses)
+
+    importance = {}
+    features = loader.dataset[0][0].shape[1]
+    for i in tqdm(range(features), desc="Permuting features", leave=True):
+        feature_losses = []
+        for batch_index, (x, y) in enumerate(tqdm(loader, desc=f"Feature {i}", leave=False)):
+            original_x = x.clone()
+            np.random.shuffle(x[:, :, i].numpy())  # Shuffle feature i
+            x = x.to(device)
+            with torch.no_grad():
+                preds = model(x).squeeze(1)
+                if preds.shape != y.shape:
+                    preds = preds.view_as(y)
+                loss = criterion(preds, y)
+            feature_losses.append(loss.item())
+            x[:, :, i] = original_x[:, :, i]  # Restore original data
+            if progress_callback:
+                progress_callback('FEATURE_IMPORTANCE', '', i, features, batch_index, len(loader))
+
+        mean_feature_loss = np.mean(feature_losses)
+        importance[i] = mean_feature_loss - initial_loss
+
+    return importance
 
 
 def create_data_loaders(train_dataset, batch_size, val_split=0.1, shuffle=True, test_dataset=None):

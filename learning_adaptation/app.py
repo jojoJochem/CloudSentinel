@@ -13,6 +13,7 @@ from celery import Celery
 from tasks import train_and_evaluate_task  # Import the task
 
 from cgnn.config import set_config, get_config, set_initial_config
+from cgnn.evaluate_prediction import predict_and_evaluate
 
 # Initialize Flask app and configure CORS
 app = Flask(__name__)
@@ -63,13 +64,10 @@ def cgnn_train_models():
         train_array = pd.read_csv(train_files['train_array'], header=None).to_numpy(dtype=np.float32).tolist()
         test_array = pd.read_csv(train_files['test_array'], header=None).to_numpy(dtype=np.float32).tolist()
         anomaly_label_array = pd.read_csv(train_files['anomaly_label_array'], header=None).to_numpy(dtype=np.float32).tolist()
-
         logger.info("Received training request.")
         logger.debug(f"Train Info: {train_info}")
-
         task = train_and_evaluate_task.apply_async(args=[train_array, test_array, anomaly_label_array, train_info])
         logger.info(f"Task {task.id} started for CGNN model training")
-
         return jsonify({"task_id": task.id}), 202
     except Exception as e:
         logger.error(traceback.format_exc())
@@ -100,7 +98,7 @@ def get_status(task_id):
         elif task.state != 'FAILURE':
             response = {'state': task.state, 'status': task.info}
         else:
-            response = {'state': task.state, 'status': str(task.info)}
+            response = {'state': task.state, 'status': task.info}
         logger.info(f"Retrieved status for task {task_id}: {response}")
         return jsonify(response)
     except Exception as e:
@@ -121,13 +119,15 @@ def get_available_models():
         models = {}
         for model_name in os.listdir(model_dir):
             model_path = os.path.join(model_dir, model_name)
-            with open(os.path.join(model_path, 'model_params.json'), 'r') as f:
-                params = json.load(f)
-            with open(os.path.join(model_path, 'model_config.json'), 'r') as f:
-                config = json.load(f)
-            with open(os.path.join(model_path, 'model_evaluation.json'), 'r') as f:
-                evaluation = json.load(f)
-            models[model_name] = {'model_params': params, 'model_config': config, 'model_evaluation': evaluation}
+            # check model_params.json exists
+            if os.path.isfile(os.path.join(model_path, 'model_params.json')):
+                with open(os.path.join(model_path, 'model_params.json'), 'r') as f:
+                    params = json.load(f)
+                with open(os.path.join(model_path, 'model_config.json'), 'r') as f:
+                    config = json.load(f)
+                with open(os.path.join(model_path, 'model_evaluation.json'), 'r') as f:
+                    evaluation = json.load(f)
+                models[model_name] = {'model_params': params, 'model_config': config, 'model_evaluation': evaluation}
 
         logger.info("Retrieved available models")
         return jsonify(models)

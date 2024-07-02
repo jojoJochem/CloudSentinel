@@ -124,6 +124,12 @@ def training_result(request):
         response = requests.get(f'{settings.API_LEARNING_ADAPTATION_URL}/get_available_models')
         response.raise_for_status()
         models = response.json()
+
+        for _, model_data in models.items():
+            model_data['model_params'] = json.dumps(model_data.get('model_params', {}), indent=4)
+            model_data['model_config'] = json.dumps(model_data.get('model_config', {}), indent=4)
+            model_data['model_evaluation'] = json.dumps(model_data.get('model_evaluation', {}), indent=4)
+
         context = {
             'models': models
         }

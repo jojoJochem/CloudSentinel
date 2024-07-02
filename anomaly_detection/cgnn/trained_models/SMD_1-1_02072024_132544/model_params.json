@@ -1,0 +1,21 @@
+{
+  "anomaly_sequence": false,
+  "comment": null,
+  "containers": [
+    "container_1"
+  ],
+  "data_entries": 28479,
+  "dataset": "SMD_1-1",
+  "duration": 60000,
+  "metrics": [
+    "cpu_usage_pods",
+    "memory_usage_pods",
+    "cpu_limit_pods"
+  ],
+  "ranked_features": {
+    "container_1_cpu_limit_pods": 0.021397707742106104,
+    "container_1_cpu_usage_pods": 0.009058709905549953,
+    "container_1_memory_usage_pods": 0.008185234013105835
+  },
+  "step_size": 60
+}

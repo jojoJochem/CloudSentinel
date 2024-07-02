@@ -5,7 +5,7 @@ import torch
 import os
 
 from cgnn.config import set_config, get_config
-from cgnn.utils import SlidingWindowDataset, create_data_loaders
+from cgnn.utils import SlidingWindowDataset, create_data_loaders, permutation_importance
 from cgnn.mtad_gat import MTAD_GAT
 from cgnn.training import Trainer
 
@@ -26,6 +26,7 @@ def train(dataset_config, train_array, test_array, anomaly_label_array, progress
     print_every = config['print_every']
     log_tensorboard = config['log_tensorboard']
     print(config)
+    print(train_array.shape, test_array.shape, anomaly_label_array.shape, anomaly_label_array)
 
     save_path = f"trained_models_temp/{config['dataset']}_{id}"
     if not os.path.exists(save_path):
@@ -38,13 +39,12 @@ def train(dataset_config, train_array, test_array, anomaly_label_array, progress
     x_train = torch.from_numpy(train_array).float()
     x_test = torch.from_numpy(test_array).float()
     n_features = x_train.shape[1]
-
     target_dims = None
     out_dim = n_features
 
     train_dataset = SlidingWindowDataset(x_train, window_size, target_dims)
     test_dataset = SlidingWindowDataset(x_test, window_size, target_dims)
-
+    print(train_dataset, test_dataset)
     train_loader, val_loader, test_loader = create_data_loaders(
         train_dataset, batch_size, val_split, shuffle_dataset, test_dataset=test_dataset
     )
@@ -82,6 +82,7 @@ def train(dataset_config, train_array, test_array, anomaly_label_array, progress
         forecast_criterion,
         use_cuda,
         save_path,
+        log_dir,
         print_every,
         log_tensorboard,
         args_summary,
@@ -90,6 +91,7 @@ def train(dataset_config, train_array, test_array, anomaly_label_array, progress
 
     trainer.fit(train_loader, val_loader)
 
+    progress_callback("TEST_LOSS", "Evaluating test loss")
     # Check test loss
     test_loss = trainer.evaluate(test_loader)
     print(f"Test forecast loss: {test_loss[0]:.5f}")
@@ -108,4 +110,12 @@ def train(dataset_config, train_array, test_array, anomaly_label_array, progress
 
     print(trainer.losses)
 
-    return trainer, config
+    if config['feature_importance']:
+        feature_importance = permutation_importance(
+            trainer.model, test_loader, forecast_criterion, trainer.device, progress_callback
+        )
+        print(feature_importance)
+    else:
+        feature_importance = None
+
+    return config, feature_importance

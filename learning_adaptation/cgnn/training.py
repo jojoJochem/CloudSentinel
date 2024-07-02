@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from tqdm import tqdm
+from torch.utils.tensorboard import SummaryWriter
 
 
 class Trainer:
@@ -40,6 +41,7 @@ class Trainer:
         forecast_criterion=nn.MSELoss(),
         use_cuda=True,
         dload="",
+        log_dir="output/",
         print_every=1,
         log_tensorboard=False,
         args_summary="",
@@ -58,6 +60,7 @@ class Trainer:
         self.device = "cuda" if use_cuda and torch.cuda.is_available() else "cpu"
         print(self.device)
         self.dload = dload
+        self.log_dir = log_dir
         self.print_every = print_every
         self.log_tensorboard = log_tensorboard
         self.progress_callback = progress_callback
@@ -74,6 +77,10 @@ class Trainer:
 
         if self.device == "cuda":
             self.model.cuda()
+
+        if self.log_tensorboard:
+            self.writer = SummaryWriter(f"{log_dir}")
+            self.writer.add_text("args_summary", args_summary)
 
     def fit(self, train_loader, val_loader=None):
         """Train model for self.n_epochs.
@@ -122,7 +129,7 @@ class Trainer:
 
                 # Update Celery task state
                 if self.progress_callback:
-                    self.progress_callback(epoch, self.n_epochs, progress, len(train_loader))
+                    self.progress_callback('TRAINING', '', epoch, self.n_epochs, progress, len(train_loader))
 
             forecast_b_losses = np.array(forecast_b_losses)
             forecast_epoch_loss = np.sqrt((forecast_b_losses ** 2).mean())
@@ -145,9 +152,16 @@ class Trainer:
             self.epoch_times.append(epoch_time)
 
             if epoch % self.print_every == 0:
-                s = (f"[Epoch {epoch + 1}] forecast_loss = {forecast_epoch_loss:.5f}, total_loss = {total_epoch_loss:.5f}")
+                s = (
+                    f"[Epoch {epoch + 1}] "
+                    f"forecast_loss = {forecast_epoch_loss:.5f}, "
+                    f"total_loss = {total_epoch_loss:.5f}"
+                )
                 if val_loader is not None:
-                    s += (f" ---- val_forecast_loss = {forecast_val_loss:.5f}, val_total_loss = {total_val_loss:.5f}")
+                    s += (
+                        f" ---- val_forecast_loss = {forecast_val_loss:.5f}, "
+                        f"val_total_loss = {total_val_loss:.5f}"
+                    )
                 s += f" [{epoch_time:.1f}s]"
                 print(s)
 
@@ -170,7 +184,8 @@ class Trainer:
 
         forecast_losses = []
         with torch.no_grad():
-            for x, y in tqdm(data_loader):
+            total_iterations = len(data_loader)
+            for iteration, (x, y) in enumerate(tqdm(data_loader)):
                 x = x.to(self.device)
                 y = y.to(self.device)
 
@@ -186,15 +201,15 @@ class Trainer:
                     y = y.squeeze(1)
 
                 forecast_loss = torch.sqrt(self.forecast_criterion(y, preds))
-
                 forecast_losses.append(forecast_loss.item())
 
+                # Update Celery task state
+                if self.progress_callback:
+                    self.progress_callback('TEST_LOSS', '', 1, 1, iteration, total_iterations)
+
         forecast_losses = np.array(forecast_losses)
-
         forecast_loss = np.sqrt((forecast_losses ** 2).mean())
-
         total_loss = forecast_loss
-
         return forecast_loss,  total_loss
 
     def save(self, file_name):

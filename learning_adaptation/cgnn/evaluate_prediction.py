@@ -1,12 +1,11 @@
 import torch
-
 from cgnn.config import set_config, get_config, set_initial_config
 from cgnn.utils import create_data_loaders, SlidingWindowDataset
 from cgnn.mtad_gat import MTAD_GAT
 from cgnn.prediction import Predictor
 
 
-def predict_and_evaluate(model_config, train_array, test_array, anomaly_label_array, save_output=True):
+def predict_and_evaluate(model_config, train_array, test_array, anomaly_label_array, progress_callback=None, save_output=True):
     model_path = f"trained_models_temp/{model_config['dataset']}_{model_config['id']}"
 
     print(f'Using model from {model_path}')
@@ -65,14 +64,7 @@ def predict_and_evaluate(model_config, train_array, test_array, anomaly_label_ar
     #     "SMD-2": (0.9925, 0.001),
     #     "SMD-3": (0.9999, 0.001)
     # }
-    # key = "SMD-" + model_config['group'][0] if model_config['dataset'] == "SMD" else model_config['dataset']
     # level, q = level_q_dict[key]
-    # if model_config['level'] is not None:
-    #     level = model_config['level']
-    # if model_config['q'] is not None:
-    #     q = model_config['q']
-
-    # # Some suggestions for Epsilon args
     # reg_level_dict = {"SMAP": 0, "MSL": 0, "SMD-1": 1, "SMD-2": 1, "SMD-3": 1}
     # key = "SMD-" + model_config['group'][0] if model_config['dataset'] == "SMD" else model_config['dataset']
     # reg_level = reg_level_dict[key]
@@ -92,11 +84,13 @@ def predict_and_evaluate(model_config, train_array, test_array, anomaly_label_ar
         "gamma": int(model_config['gamma']),
         "reg_level": reg_level,
         "save_path": model_path,
+        "progress_callback": progress_callback
     }
+
+    print(prediction_args)
 
     summary_file_name = "model_evaluation.json"
 
-    label = anomaly_label_array[window_size:] if anomaly_label_array is not None else None
+    label = anomaly_label_array[window_size:].flatten() if anomaly_label_array is not None else None
     predictor = Predictor(model, window_size, n_features, prediction_args, summary_file_name=summary_file_name)
-
     return predictor.predict_anomalies(x_train, x_test, label, save_output=save_output)

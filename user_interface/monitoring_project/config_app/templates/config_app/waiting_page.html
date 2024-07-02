@@ -38,12 +38,32 @@
                 } else if (data.state === 'FAILURE') {
                     $('#status').text("Processing failed: " + data.status);
                     clearInterval(interval);
-                } else {
-                    $('#status').text("Status: " + data.status);
-                    if (data.status.progress && data.status.total_steps) {
-                        var progress = (data.status.progress / data.status.total_steps) * 100;
+                } else if (data.state === 'TRAINING') {
+                    $('#status').text("Training model for " + data.status.total_outer + " epochs. Now at " + data.status.outer + "/" + data.status.total_outer + ".");
+                    if (data.status.inner && data.status.total_inner) {
+                        var progress = (data.status.inner / data.status.total_inner) * 100;
                         $('#progress-bar').css('width', progress + '%').attr('aria-valuenow', progress);
                     }
+                }else if (data.state === 'FEATURE_IMPORTANCE') {
+                    $('#status').text("Calculating feature importance for " + data.status.total_outer + " features. Now at " + data.status.outer + "/" + data.status.total_outer + ".");
+                    if (data.status.inner && data.status.total_inner) {
+                        var progress = (data.status.inner / data.status.total_inner) * 100;
+                        $('#progress-bar').css('width', progress + '%').attr('aria-valuenow', progress);
+                    }
+                } else if (data.state === 'CALCULATING') {
+                    $('#status').text("Predicting and calculating anomaly scores..");
+                    if (data.status.inner && data.status.total_inner) {
+                        var progress = (data.status.inner / data.status.total_inner) * 100;
+                        $('#progress-bar').css('width', progress + '%').attr('aria-valuenow', progress);
+                    }
+                } else if (data.state === 'TEST_LOSS') {
+                    $('#status').text("Evaluating test loss.");
+                    if (data.status.inner && data.status.total_inner) {
+                        var progress = (data.status.inner / data.status.total_inner) * 100;
+                        $('#progress-bar').css('width', progress + '%').attr('aria-valuenow', progress);
+                    }
+                } else {
+                    $('#status').text("Status: " + data.state);
                 }
             },
             error: function() {

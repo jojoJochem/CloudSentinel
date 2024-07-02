@@ -18,9 +18,9 @@ celery = Celery(__name__, backend='redis://redis:6379/2', broker='redis://redis:
 
 class CustomTask(Task):
     autoretry_for = (Exception,)
-    retry_kwargs = {'max_retries': 5, 'countdown': 60}
-    time_limit = 7200
-    soft_time_limit = 7000
+    retry_kwargs = {'max_retries': 1, 'countdown': 60}
+    time_limit = 10800
+    soft_time_limit = 10000
 
 
 celery.Task = CustomTask
@@ -60,16 +60,19 @@ def train_and_evaluate_task(self, train_array, test_array, anomaly_label_array, 
         # Update task state to EVALUATING
         self.update_state(state='INITIATING', meta='Initiating training')
 
-        def progress_callback(epoch, total_epochs, progress, total_steps):
-            self.update_state(state='TRAINING', meta={
-                'epoch': epoch + 1,
-                'total_epochs': total_epochs,
-                'progress': progress + 1,
-                'total_steps': total_steps
-            })
+        def progress_callback(progress_state, message, outer=None, total_outer=None, inner=None, total_inner=None):
+            if message == '':
+                self.update_state(state=progress_state, meta={
+                    'outer': outer + 1,
+                    'total_outer': total_outer,
+                    'inner': inner + 1,
+                    'total_inner': total_inner
+                })
+            else:
+                self.update_state(state=progress_state, meta=message)
 
         # Train the model
-        _, model_config = train(
+        model_config, feature_importance = train(
             train_info['data'],
             np.array(train_array, dtype=np.float32),
             np.array(test_array, dtype=np.float32),
@@ -83,16 +86,37 @@ def train_and_evaluate_task(self, train_array, test_array, anomaly_label_array, 
         self.update_state(state='EVALUATING', meta='Evaluating the model')
 
         logger.info("Starting the evaluation process.")
+        # testing purposes
+        # # Load model_config from trained_models_temp/SMD_1-1_30062024_095123 directory
+        # model_dir = "trained_models_temp/SMD_1-1_01072024_152236"
+        # with open(f"{model_dir}/model_config.json", "r") as f:
+        #     model_config = json.load(f)
 
         # Evaluate the model
         predict_and_evaluate(
             model_config,
             np.array(train_array, dtype=np.float32),
             np.array(test_array, dtype=np.float32),
-            np.array(anomaly_label_array, dtype=np.float32)
+            np.array(anomaly_label_array, dtype=np.float32),
+            progress_callback=progress_callback
         )
 
         logger.info("Evaluation completed.")
+        if model_config['feature_importance']:
+            # Generate feature names based on the given container and metric names
+            feature_names = {}
+            index = 0
+            for container in train_info['data']["containers"]:
+                for metric in train_info['data']["metrics"]:
+                    feature_names[str(index)] = f"{container}_{metric}"
+                    index += 1
+            print(feature_importance)
+            # Create a ranked list of features based on importance
+            ranked_features = {name: feature_importance[int(idx)] for idx, name in feature_names.items()}
+            ranked_features = dict(sorted(ranked_features.items(), key=lambda item: item[1], reverse=True))
+
+            train_info['data']["ranked_features"] = ranked_features
+        print(train_info['data'])
 
         # Save model parameters
         model_dir = f"trained_models_temp/{model_config['dataset']}_{model_config['id']}"

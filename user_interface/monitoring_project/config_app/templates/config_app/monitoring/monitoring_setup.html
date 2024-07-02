@@ -28,6 +28,24 @@
                             <strong>Step Size:</strong> {{ details.model_params.step_size }} seconds<br>
                         </div>
                         <br>
+                        <h5>Ranked Features</h5>
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Importance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for feature, importance in details.model_params.ranked_features.items %}
+                                <tr>
+                                    <td>{{ feature }}</td>
+                                    <td>{{ importance|floatformat:6 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <br>
                         <h5>Evaluation Summary</h5>
                         <table class="table table-striped table-hover">
                             <thead>
@@ -53,6 +71,7 @@
                 </div>
                 {% endfor %}
             </div>
+
 
             <form id="monitoring-form" method="post" class="mb-5">
                 {% csrf_token %}

@@ -25,9 +25,9 @@
                     {% for model_name, model_data in models.items %}
                         <tr>
                             <td>{{ model_name }}</td>
-                            <td><pre>{{ model_data.model_params | json_script:"model_params" }}</pre></td>
-                            <td><pre>{{ model_data.model_config | json_script:"model_config" }}</pre></td>
-                            <td><pre>{{ model_data.model_evaluation | json_script:"model_evaluation" }}</pre></td>
+                            <td><pre><code class="json">{{ model_data.model_params }}</code></pre></td>
+                            <td><pre><code class="json">{{ model_data.model_config }}</code></pre></td>
+                            <td><pre><code class="json">{{ model_data.model_evaluation }}</code></pre></td>
                             <td><input type="radio" name="selected_model" value="{{ model_name }}"></td>
                         </tr>
                     {% endfor %}
@@ -39,4 +39,16 @@
         <p>No models available.</p>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightBlock(block);
+            });
+        });
+    </script>
 {% endblock %}
