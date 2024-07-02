@@ -6,7 +6,7 @@
   ],
   "data_entries": 28479,
   "dataset": "SMD_1-1",
-  "duration": 60000,
+  "duration": 179220,
   "metrics": [
     "cpu_usage_pods",
     "memory_usage_pods",

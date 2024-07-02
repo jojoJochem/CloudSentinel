@@ -9,7 +9,7 @@
   "data_entries": 28479,
   "dataset": "SMD_1-1",
   "dropout": 0.4,
-  "duration": 60000,
+  "duration": 179220,
   "dynamic_pot": false,
   "epochs": 1,
   "fc_hid_dim": 150,
