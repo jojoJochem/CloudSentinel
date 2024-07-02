@@ -36,10 +36,8 @@ def load_model_and_predict(test_array, dataset, save_output=True):
     x_test = torch.from_numpy(test_array).float()
     n_features = x_test.shape[1]
     target_dims = None
-    # TODO check if this is correct
-    # TODO
-    # TODO CHEKCHECKECHEKCHEKCHECK
-    out_dim = 38
+    out_dim = n_features
+
 
     test_dataset = SlidingWindowDataset(x_test, window_size, target_dims)
     train_loader, val_loader, test_loader = create_data_loaders(
@@ -133,10 +131,3 @@ def check_anomalies(df):
     return percentage
 
 
-if __name__ == "__main__":
-    load_model_and_predict(new_dataset="SMD", model_id="25052024_210310",
-                           dataset="SMD", group="1-1", save_output=True)
-    load_model_and_predict(new_dataset="SMD", model_id="26052024_024540",
-                           dataset="SMD", group="1-2", save_output=True)
-    load_model_and_predict(new_dataset="SMD", model_id="26052024_101725",
-                           dataset="SMD", group="1-7", save_output=True)
