@@ -57,5 +57,6 @@
   "step_size": 60,
   "duration": 179220,
   "anomaly_sequence": false,
-  "data_entries": 23703
+  "data_entries": 23703,
+  "id": "02072024_224505"
 }

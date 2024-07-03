@@ -18,6 +18,7 @@ def collect_crca_data(crca_data):
     Returns:
         Response: Flask response object containing the result from the CRCA preprocessing API.
     """
+    logging.info(crca_data['data'])
     dataframe = fetch_metrics(crca_data['data']['crca_pods'], crca_data['data']['metrics'],
                               crca_data['data']['start_time'], crca_data['data']['end_time'],
                               crca_data['settings']['PROMETHEUS_URL'], crca_data['data']['step'])

@@ -74,7 +74,7 @@ def detect_anomalies():
                     'task_id': task_id,
                     'start_time': test_info['data']['start_time'],
                     'end_time': test_info['data']['end_time'],
-                    'containers': test_info['data']['crca_pods'],
+                    'crca_pods': test_info['data']['crca_pods'],
                     'metrics': test_info['data']['metrics'],
                     'step': test_info['data']['data_interval']
                 }
