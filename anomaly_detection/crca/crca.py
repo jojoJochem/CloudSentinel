@@ -84,27 +84,16 @@ def return_json_object(df, image_base64, crca_info, task_id):
 
     Saves the JSON object to a file.
     """
-    try:
-        logger.info("Creating JSON object for task %s", task_id)
-        # Prepare response data
-        csv_payload = df.to_csv(index=False)
-        response_data = {
-            'containers': crca_info['data']['crca_pods'],
-            'metrics': crca_info['data']['metrics'],
-            'ranking': csv_payload,
-            'graph_image': image_base64
-        }
-
-        # Save response data to a JSON file
-        path = 'results/' + task_id
-        if not os.path.isdir(path):
-            os.mkdir(path)
-        with open(path + '/crca_results.json', 'w') as f:
-            json.dump(response_data, f, indent=2)
-        logger.info("JSON object created and saved for task %s", task_id)
-    except Exception as e:
-        logger.error("Error in return_json_object: %s", traceback.format_exc())
-        raise e
+    logger.info("Creating JSON object for task %s", task_id)
+    # Prepare response data
+    csv_payload = df.to_csv(index=False)
+    response_data = {
+        'containers': crca_info['data']['crca_pods'],
+        'metrics': crca_info['data']['metrics'],
+        'ranking': csv_payload,
+        'graph_image': image_base64
+    }
+    return response_data
 
 
 def match_names(df_concat, crca_info):

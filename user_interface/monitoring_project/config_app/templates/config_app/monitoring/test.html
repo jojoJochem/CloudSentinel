@@ -29,7 +29,7 @@
                         </div>
                         <br>
                         <h5>Ranked Features</h5>
-                        <table class="table table-striped table-hover">
+                        <table class="table table-striped table-hover rankedFeaturesTable">
                             <thead>
                                 <tr>
                                     <th>Feature</th>
@@ -109,6 +109,8 @@
                     var details = document.getElementById('details-' + model);
                     if (details.style.display === 'none') {
                         details.style.display = 'block';
+                        const table = details.querySelector(".rankedFeaturesTable");
+                        sortTableByImportance(table);
                     } else {
                         details.style.display = 'none';
                     }
@@ -141,7 +143,7 @@
                     document.getElementById('crca-config-summary').style.display = 'block';
                     toggleOverlay();
                 }
-
+                
                 document.addEventListener('DOMContentLoaded', function () {
                     document.getElementById('monitoring-form').addEventListener('submit', function (event) {
                         event.preventDefault();
@@ -169,6 +171,22 @@
                         });
                     });
                 });
+
+                function sortTableByImportance(table) {
+                    if (!table) return;
+
+                    const rows = Array.from(table.querySelectorAll("tbody tr"));
+
+                    rows.sort((a, b) => {
+                        const importanceA = parseFloat(a.cells[1].innerText);
+                        const importanceB = parseFloat(b.cells[1].innerText);
+                        return importanceB - importanceA;
+                    });
+
+                    const tbody = table.querySelector("tbody");
+                    tbody.innerHTML = "";
+                    rows.forEach(row => tbody.appendChild(row));
+                }
             </script>
         </div>
     </div>

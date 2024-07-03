@@ -6,7 +6,7 @@ import traceback
 import shutil
 import pandas as pd
 from flask_cors import CORS
-from celery import Celery
+from celery import Celery, signals
 
 from config import set_config, get_config, set_initial_config
 from crca import run_crca
@@ -47,17 +47,60 @@ def run_crca_task(self, crca_data_json, crca_info):
         crca_info (dict): Information required for crca.
 
     Returns:
-        None
+        dict: CRCA results
     """
     try:
         crca_data = pd.read_json(crca_data_json, orient='split')
         task_id = self.request.id
 
-        run_crca(crca_data, crca_info, task_id)
-        return "success"
+        response_data = run_crca(crca_data, crca_info, task_id)
+        return response_data
     except Exception as e:
         logger.error(traceback.format_exc())
         raise self.retry(exc=e, countdown=60)
+
+
+def save_crca(response_data, task_id):
+    """
+    Save CRCA results to a JSON file.
+
+    Args:
+        response_data (dict): CRCA results to be saved.
+        task_id (str): Unique identifier of the task.
+
+    Returns:
+        None
+    """
+    try:
+        # Save response data to a JSON file
+        path = 'results/' + task_id
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        with open(path + '/crca_results.json', 'w') as f:
+            json.dump(response_data, f, indent=2)
+        logger.info("JSON object created and saved for task %s", task_id)
+    except Exception as e:
+        logger.error("Error in save_crca: %s", traceback.format_exc())
+        raise e
+
+
+@signals.task_postrun.connect
+def task_postrun_handler(sender=None, result=None, **kwargs):
+    """
+    Signal handler for Celery task postrun.
+
+    Args:
+        sender (Task): The Celery task instance.
+        result (dict): The result of the task.
+        kwargs: Additional keyword arguments.
+
+    Returns:
+        None
+    """
+    if sender.name == 'app.run_crca_task':
+        task_id = sender.request.id
+        if result:
+            save_crca(result, task_id)
 
 
 @app.route('/crca', methods=['POST'])
