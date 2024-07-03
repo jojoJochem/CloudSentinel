@@ -25,6 +25,11 @@ os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 # Configure and initialize Celery instance
 app.config['broker_url'] = 'redis://redis:6379/1'
 app.config['result_backend'] = 'redis://redis:6379/1'
+
+# testing purposes
+# app.config['broker_url'] = 'redis://localhost:6379/1'
+# app.config['result_backend'] = 'redis://localhost:6379/1'
+
 celery = Celery(app.import_name, backend=app.config['result_backend'], broker=app.config['broker_url'])
 celery.conf.update(app.config)
 
@@ -82,25 +87,6 @@ def save_crca(response_data, task_id):
     except Exception as e:
         logger.error("Error in save_crca: %s", traceback.format_exc())
         raise e
-
-
-@signals.task_postrun.connect
-def task_postrun_handler(sender=None, result=None, **kwargs):
-    """
-    Signal handler for Celery task postrun.
-
-    Args:
-        sender (Task): The Celery task instance.
-        result (dict): The result of the task.
-        kwargs: Additional keyword arguments.
-
-    Returns:
-        None
-    """
-    if sender.name == 'app.run_crca_task':
-        task_id = sender.request.id
-        if result:
-            save_crca(result, task_id)
 
 
 @app.route('/crca', methods=['POST'])
@@ -189,14 +175,16 @@ def get_results(task_id):
     """
     try:
         logger.info(f"Received request to get results for task_id: {task_id}")
-        path = 'results/'+str(task_id)
-        if os.path.exists(path):
-            with open(path + '/crca_results.json', 'r') as f:
-                data = json.load(f)
-            logger.info(f"Results retrieved for task_id: {task_id}")
+        task = run_crca_task.AsyncResult(task_id)
+
+        if task.state == 'SUCCESS':
+            save_crca(task.result, task_id)
+            data = task.result
+            logger.info(f"Results retrieved and saved for task_id: {task_id}")
         else:
-            data = {"error": "Results not found"}
+            data = {"error": "Results not available"}
             logger.info(f"No results found for task_id: {task_id}")
+
         return jsonify(data), 200
 
     except Exception as e:

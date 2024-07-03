@@ -19,6 +19,7 @@ celery = Celery(__name__, backend='redis://redis:6379/2', broker='redis://redis:
 class CustomTask(Task):
     autoretry_for = (Exception,)
     retry_kwargs = {'max_retries': 1, 'countdown': 60}
+    # OPTIONAL: Set time limits for the task
     # time_limit = 10800
     # soft_time_limit = 10000
 

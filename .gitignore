@@ -12,3 +12,11 @@
 /learning_adaptation/env_adaptation
 /user_interface/monitoring_project/env_django
 /_data
+**/__pycache__
+# /data_ingestion/__pycache__
+# /anomaly_detection/cgnn/__pycache__
+# /anomaly_detection/crca/__pycache__
+# /learning_adaptation/__pycache__
+# /data_processing/__pycache__
+# /data_ingestion/__pycache__
+# /data_ingestion/__pycache__

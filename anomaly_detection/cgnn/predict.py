@@ -73,23 +73,10 @@ def load_model_and_predict(test_array, dataset, save_output=True):
     #     "SMD-2": (0.9925, 0.001),
     #     "SMD-3": (0.9999, 0.001)
     # }
-    # key = "SMD-" + model_config['group'][0] if model_config['dataset'] == "SMD" else model_config['dataset']
-    # if key in level_q_dict:
     #     level, q = level_q_dict[key]
     # else:
     #     level, q = (0.9950, 0.001)
-    # if model_config['level'] is not None:
-    #     level = model_config['level']
-    # if model_config['q'] is not None:
-    #     q = model_config['q']
-
-    # # Some suggestions for Epsilon args
     # reg_level_dict = {"SMAP": 0, "MSL": 0, "SMD-1": 1, "SMD-2": 1, "SMD-3": 1}
-    # key = "SMD-" + model_config['group'][0] if dataset == "SMD" else dataset
-    # if key in reg_level_dict:
-    #     reg_level = reg_level_dict[key]
-    # else:
-    #     reg_level = 1
     level = model_config['level']
     q = model_config['q']
     reg_level = model_config['reg_level']
