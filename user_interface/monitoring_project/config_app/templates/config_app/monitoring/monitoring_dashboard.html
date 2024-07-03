@@ -1,255 +1,197 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load json_script %}
 
-{% block title %}Monitoring Dashboard{% endblock %}
-
-{% block sidebar %}
-<div class="sidebar bg-light text-dark p-4 shadow">
-    <h4 class="text-dark mb-4">Tasks</h4>
-    <ul id="taskIdList" class="list-unstyled">
-    </ul>
-</div>
-{% endblock %}
-
-{% block content_class %}with-sidebar{% endblock %}
+{% block title %}Monitoring Configuration{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <h1 class="text-center my-4">Monitoring Dashboard</h1>
-            <div id="taskDetails" class="task-details mb-4 p-4 bg-light rounded shadow-sm">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h1 class="text-center mb-4">Monitoring Configuration</h1>
+
+            <div class="mb-4">
+                <h3 class="mb-3">Available Models</h3>
+                <i><small>(click to toggle details)</small></i>
+                {% for model, details in models.items %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" onclick="toggleDetails('{{ model }}')" style="cursor: pointer;">
+                        <h5 class="mb-0">{{ model }}</h5>
+                        <span class="ml-auto">&#9660;</span>
+                    </div>
+                    <div id="details-{{ model }}" class="card-body" style="display: none;">
+                        <h5>Model Parameters</h5>
+                        <div>
+                            <strong>Metrics:</strong> {{ details.model_params.metrics|join:", " }}  ({{ details.model_params.metrics|length }} in total)<br>
+                            <strong>Containers:</strong> {{ details.model_params.containers|join:", " }}  ({{ details.model_params.containers|length }} in total)<br>
+                            <strong>Data Entries:</strong> {{ details.model_params.data_entries }}<br>
+                            <strong>Duration:</strong> {{ details.model_params.duration }} seconds<br>
+                            <strong>Step Size:</strong> {{ details.model_params.step_size }} seconds<br>
+                        </div>
+                        <br>
+                        <h5>Ranked Features</h5>
+                        <table class="table table-striped table-hover" id="rankedFeaturesTable-{{ model }}">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Importance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for feature, importance in details.model_params.ranked_features.items %}
+                                <tr>
+                                    <td>{{ feature }}</td>
+                                    <td>{{ importance|floatformat:6 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <br>
+                        <h5>Evaluation Summary</h5>
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Evaluation Type</th>
+                                    {% for key in details.model_evaluation.epsilon_result.keys %}
+                                    <th>{{ key }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result_type, result_data in details.model_evaluation.items %}
+                                <tr>
+                                    <th>{{ result_type }}</th>
+                                    {% for value in result_data.values %}
+                                    <td>{{ value|floatformat:4 }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
-            <div class="chart-container bg-white p-4 rounded shadow-sm">
-                <canvas id="monitoringChart" width="400" height="200"></canvas>
+
+
+            <form id="monitoring-form" method="post" class="mb-5">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div id="crca-config-summary" class="small mt-3" style="display: none;">
+                    <h5>CRCA Configuration</h5>
+                    <ul id="crca-config-list"></ul>
+                </div>
+                <button type="button" class="btn btn-secondary w-100 mb-3" onclick="toggleOverlay()">Configure CRCA</button>
+                <button type="submit" class="btn btn-success w-100">Start Monitoring</button>
+                <input type="hidden" id="crca-config-data" name="crca_config_data">
+            </form>
+
+            <div id="crca-config-overlay" class="overlay" style="display:none;">
+                <div class="overlay-content">
+                    <span class="closebtn" onclick="toggleOverlay()">&times;</span>
+                    <h2>CRCA Configuration</h2>
+                    <form id="crca-config-form">
+                        {% csrf_token %}
+                        {% for field in crca_form %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                            </div>
+                        {% endfor %}
+                        <button type="button" class="btn btn-primary" onclick="applyCRCAConfig()">Apply CRCA Config</button>
+                    </form>
+                </div>
             </div>
-            <div id="crcaTaskDetails" class="crca-task-details mt-4 p-4 bg-white rounded shadow-sm">
-            </div>
+
+
+
+            <script>
+                function toggleDetails(model) {
+                    var details = document.getElementById('details-' + model);
+                    if (details.style.display === 'none') {
+                        details.style.display = 'block';
+                        const table = details.querySelector("table[id^=rankedFeaturesTable]");
+                        sortTableByImportance(table);
+                    } else {
+                        details.style.display = 'none';
+                    }
+                }
+
+                function toggleOverlay() {
+                    var overlay = document.getElementById('crca-config-overlay');
+                    if (overlay.style.display === 'none' || overlay.style.display === '') {
+                        overlay.style.display = 'block';
+                    } else {
+                        overlay.style.display = 'none';
+                    }
+                }
+
+                function applyCRCAConfig() {
+                    var crcaForm = document.getElementById('crca-config-form');
+                    var formData = new FormData(crcaForm);
+                    var crcaConfig = {};
+                    var crcaConfigList = document.getElementById('crca-config-list');
+                    crcaConfigList.innerHTML = '';
+
+                    formData.forEach((value, key) => {
+                        crcaConfig[key] = value;
+                        var li = document.createElement('li');
+                        li.textContent = key + ': ' + value;
+                        crcaConfigList.appendChild(li);
+                    });
+
+                    document.getElementById('crca-config-data').value = JSON.stringify(crcaConfig);
+                    document.getElementById('crca-config-summary').style.display = 'block';
+                    toggleOverlay();
+                }
+
+                function sortTableByImportance(table) {
+                    if (!table) return;
+
+                    const rows = Array.from(table.querySelectorAll("tbody tr"));
+
+                    rows.sort((a, b) => {
+                        const importanceA = parseFloat(a.cells[1].innerText);
+                        const importanceB = parseFloat(b.cells[1].innerText);
+                        return importanceB - importanceA;
+                    });
+
+                    const tbody = table.querySelector("tbody");
+                    tbody.innerHTML = "";
+                    rows.forEach(row => tbody.appendChild(row));
+                }
+            </script>
         </div>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        let chartInstance = null;
-        let allResults = {};
-
-        async function fetchResults() {
-            const response = await fetch('/fetch-cgnn-results/', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        }
-
-        function formatStartTime(startTime) {
-            const date = new Date(startTime * 1000);
-            return date.toLocaleString();
-        }
-
-        function populateSidebar(results) {
-            const taskIdList = document.getElementById('taskIdList');
-            taskIdList.innerHTML = '';
-
-            const taskIdStartTimes = Object.keys(results).map(taskId => {
-                const firstResult = results[taskId].results[0];
-                const startTime = firstResult ? firstResult.start_time : null;
-                return { taskId, startTime };
-            });
-
-            taskIdStartTimes.sort((a, b) => b.startTime - a.startTime);
-
-            taskIdStartTimes.forEach(({ taskId, startTime }) => {
-                const listItem = document.createElement('li');
-                listItem.classList.add('mb-2');
-                const link = document.createElement('a');
-                link.href = "#";
-                link.textContent = "Session: " + formatStartTime(startTime);
-                link.classList.add('text-decoration-none', 'text-dark', 'd-block', 'py-1', 'px-1', 'rounded', 'sidebar-link');
-                link.addEventListener('click', () => {
-                    displayTaskDetails(results[taskId]);
-                    plotData(results[taskId].results);
-                });
-                listItem.appendChild(link);
-                taskIdList.appendChild(listItem);
-            });
-        }
-
-        function displayTaskDetails(taskData) {
-            const taskDetails = document.getElementById('taskDetails');
-            const startTimeFormatted = formatStartTime(taskData.start_time);
-            const containersFormatted = taskData.containers.join(', ');
-            const metricsFormatted = taskData.metrics.join(', ');
-
-            taskDetails.innerHTML = `
-                <h3 class="my-3">Task Details</h3>
-                <p><strong>Model:</strong> ${taskData.model}</p>
-                <p><strong>Start Time:</strong> ${startTimeFormatted}</p>
-                <p><strong>Containers:</strong> ${containersFormatted}</p>
-                <p><strong>Metrics:</strong> ${metricsFormatted}</p>
-            `;
-
-            const crcaTaskIds = Object.values(taskData.results)
-                .filter(result => result.percentage > taskData.crca_threshold)
-                .map(result => ({ crca_task_id: result.crca_task_id, start_time: result.start_time }));
-
-            if (crcaTaskIds.length > 0) {
-                populateCrcaDropdown(crcaTaskIds);
-            }
-        }
-
-        function populateCrcaDropdown(crcaTaskIds) {
-            const crcaTaskDetails = document.getElementById('crcaTaskDetails');
-            crcaTaskDetails.innerHTML = `
-                <h2>Select CRCA Task ID</h2>
-                <select id="crcaTaskDropdown" class="form-select my-3">
-                    <option disabled selected>Select CRCA Task ID</option>
-                    ${crcaTaskIds.map(task => `<option value="${task.crca_task_id}">${formatStartTime(task.start_time)}</option>`).join('')}
-                </select>
-                <div id="crcaTaskContent"></div>
-            `;
-
-            const dropdown = document.getElementById('crcaTaskDropdown');
-            dropdown.addEventListener('change', async () => {
-                const selectedTaskId = dropdown.value;
-                await fetchAndDisplayCrcaTaskDetails(selectedTaskId);
-            });
-        }
-
-        async function fetchAndDisplayCrcaTaskDetails(taskId) {
-            const response = await fetch(`/fetch-crca-task-details/${taskId}/`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const crcaData = await response.json();
-            displayCrcaTaskDetails(crcaData);
-        }
-
-        function displayCrcaTaskDetails(crcaData) {
-            const crcaTaskContent = document.getElementById('crcaTaskContent');
-            crcaTaskContent.innerHTML = `
-                <h2>CRCA Task Details</h2>
-                <div class="text-center">
-                    <h3>Graph Images</h3>
-                    ${crcaData.graph_image ? `<img src="data:image/png;base64,${crcaData.graph_image}" alt="Graph Image" class="img-fluid mb-3" />` : ''}
-                </div>
-                <h3>CSV Data</h3>
-                <div class="table-responsive">
-                    ${convertCsvToTable(crcaData.ranking)}
-                </div>
-            `;
-        }
-
-        function convertCsvToTable(csvData) {
-            const lines = csvData.split('\n');
-            const table = document.createElement('table');
-            table.classList.add('table', 'table-striped', 'table-bordered');
-
-            lines.forEach((line, index) => {
-                const row = table.insertRow();
-                const cells = line.split(',');
-                cells.forEach(cell => {
-                    const cellElement = index === 0 ? row.insertCell('th') : row.insertCell();
-                    cellElement.textContent = cell;
-                });
-            });
-
-            return table.outerHTML;
-        }
-
-        function plotData(data) {
-            const labels = Object.values(data).map(item => {
-                const date = new Date(item.end_time * 1000);
-                return date.toLocaleString();
-            });
-            const values = Object.values(data).map(item => item.percentage);
-
-            const ctx = document.getElementById('monitoringChart').getContext('2d');
-
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Anomaly Detection Results',
-                        data: values,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 2,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)'
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Percentage'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'End Time'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            labels: {
-                                color: '#333'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        async function updateDashboard() {
-            try {
-                allResults = await fetchResults();
-                populateSidebar(allResults);
-                const firstTaskId = Object.keys(allResults)[0];
-                displayTaskDetails(allResults[firstTaskId]);
-                plotData(allResults[firstTaskId].results);
-            } catch (error) {
-                console.error('Error fetching results:', error);
-            }
-        }
-
-        updateDashboard();
-    });
-</script>
+{% endblock %}
 
 <style>
-.sidebar-link {
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-.sidebar-link:hover {
-    background-color: #f0f0f0 !important;
-    color: #000000 !important;
-    text-decoration: none !important;
-    font-weight: bold !important;
-}
-.text-center img {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: none;
+        z-index: 1000;
+    }
+    .overlay-content {
+        position: relative;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+        padding: 20px;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 8px;
+    }
+    .closebtn {
+        position: absolute;
+        top: 10px;
+        right: 25px;
+        font-size: 35px;
+        cursor: pointer;
+    }
 </style>
-{% endblock %}

@@ -2,7 +2,7 @@
   "model": "SMD_1-1_copy",
   "start_time": 1718738837,
   "containers": [
-    "hoi"
+    "test"
   ],
   "metrics": [
     "cpu_usage_pods",

@@ -29,7 +29,7 @@
                         </div>
                         <br>
                         <h5>Ranked Features</h5>
-                        <table class="table table-striped table-hover">
+                        <table class="table table-striped table-hover" id="rankedFeaturesTable">
                             <thead>
                                 <tr>
                                     <th>Feature</th>
@@ -169,6 +169,25 @@
                         });
                     });
                 });
+
+                document.addEventListener("DOMContentLoaded", function() {
+                    sortTableByImportance();
+                });
+
+                function sortTableByImportance() {
+                    const table = document.getElementById("rankedFeaturesTable");
+                    const rows = Array.from(table.querySelectorAll("tbody tr"));
+
+                    rows.sort((a, b) => {
+                        const importanceA = parseFloat(a.cells[1].innerText);
+                        const importanceB = parseFloat(b.cells[1].innerText);
+                        return importanceB - importanceA;
+                    });
+
+                    const tbody = table.querySelector("tbody");
+                    tbody.innerHTML = "";
+                    rows.forEach(row => tbody.appendChild(row));
+                }
             </script>
         </div>
     </div>

@@ -146,7 +146,7 @@ def get_results(task_id):
     """
     try:
         logger.info(f"Received request to get results for task_id: {task_id}")
-        path = 'results/'+task_id
+        path = 'results/'+str(task_id)
         if os.path.exists(path):
             with open(path + '/crca_results.json', 'r') as f:
                 data = json.load(f)
