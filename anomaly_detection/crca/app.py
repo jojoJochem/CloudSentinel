@@ -146,9 +146,9 @@ def get_results(task_id):
     """
     try:
         logger.info(f"Received request to get results for task_id: {task_id}")
-        path = 'results/'+task_id+'/crca_results.json'
+        path = 'results/'+task_id
         if os.path.exists(path):
-            with open('results/'+task_id+'/crca_results.json', 'r') as f:
+            with open(path + '/crca_results.json', 'r') as f:
                 data = json.load(f)
             logger.info(f"Results retrieved for task_id: {task_id}")
         else:
@@ -231,8 +231,8 @@ def update_config():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-if __name__ == '__main__':
-    logger.info("Initializing configuration")
-    set_initial_config()
-    logger.info("Starting Flask app")
-    app.run(debug=False, host='0.0.0.0', port=5023)
+# if __name__ == '__main__':
+#     logger.info("Initializing configuration")
+#     set_initial_config()
+#     logger.info("Starting Flask app")
+#     app.run(debug=False, host='0.0.0.0', port=5023)

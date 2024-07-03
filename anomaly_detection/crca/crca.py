@@ -7,6 +7,7 @@ import base64
 import json
 import matplotlib
 import logging
+import traceback
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -30,6 +31,9 @@ matplotlib.use("Agg")
 # Ignore warnings
 warnings.filterwarnings("ignore")
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def run_crca(crca_data, crca_info, task_id, parallel=False):
     """
@@ -45,6 +49,7 @@ def run_crca(crca_data, crca_info, task_id, parallel=False):
     - dict: Response data containing containers, metrics, ranking, and graph image.
     """
     try:
+        logger.info("Starting CRCA run for task %s", task_id)
         # Get number of iterations from configuration
         iterations_arg = get_config()['arg_iterations']
 
@@ -60,9 +65,10 @@ def run_crca(crca_data, crca_info, task_id, parallel=False):
         name_matched_df = match_names(cumulative_df, crca_info)
         response_data = return_json_object(name_matched_df, image_base64, crca_info, task_id)
 
+        logger.info("CRCA run completed for task %s", task_id)
         return response_data
     except Exception as e:
-        logging.error("Error in run_crca: %s", str(e))
+        logger.error("Error in run_crca: %s", traceback.format_exc())
         raise e
 
 
@@ -78,21 +84,27 @@ def return_json_object(df, image_base64, crca_info, task_id):
 
     Saves the JSON object to a file.
     """
-    # Prepare response data
-    csv_payload = df.to_csv(index=False)
-    response_data = {
-        'containers': crca_info['data']['crca_pods'],
-        'metrics': crca_info['data']['metrics'],
-        'ranking': csv_payload,
-        'graph_image': image_base64
-    }
+    try:
+        logger.info("Creating JSON object for task %s", task_id)
+        # Prepare response data
+        csv_payload = df.to_csv(index=False)
+        response_data = {
+            'containers': crca_info['data']['crca_pods'],
+            'metrics': crca_info['data']['metrics'],
+            'ranking': csv_payload,
+            'graph_image': image_base64
+        }
 
-    # Save response data to a JSON file
-    path = 'results/' + task_id
-    if not os.path.isdir(path):
-        os.mkdir(path)
-    with open(path + '/crca_results.json', 'w') as f:
-        json.dump(response_data, f, indent=2)
+        # Save response data to a JSON file
+        path = 'results/' + task_id
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        with open(path + '/crca_results.json', 'w') as f:
+            json.dump(response_data, f, indent=2)
+        logger.info("JSON object created and saved for task %s", task_id)
+    except Exception as e:
+        logger.error("Error in return_json_object: %s", traceback.format_exc())
+        raise e
 
 
 def match_names(df_concat, crca_info):
@@ -106,16 +118,21 @@ def match_names(df_concat, crca_info):
     Returns:
     - pd.DataFrame: DataFrame with matched column names.
     """
-    # Add index column and match container and metric names
-    df_concat['index'] = df_concat['column_nr'].astype(int)
-    selected_containers = crca_info['data']['crca_pods']
-    selected_metrics = crca_info['data']['metrics']
-    column_names = [f"{container}_{metric}" for container in selected_containers for metric in selected_metrics]
-    name_matched_df = df_concat.copy()
-    name_matched_df['metric'] = name_matched_df['column_nr'].apply(lambda x: column_names[x])
-    name_matched_df = name_matched_df[['metric', 'index', 'score']]
-    logging.info("Matched column names: %s", name_matched_df)
-    return name_matched_df
+    try:
+        logger.info("Matching column names")
+        # Add index column and match container and metric names
+        df_concat['index'] = df_concat['column_nr'].astype(int)
+        selected_containers = crca_info['data']['crca_pods']
+        selected_metrics = crca_info['data']['metrics']
+        column_names = [f"{container}_{metric}" for container in selected_containers for metric in selected_metrics]
+        name_matched_df = df_concat.copy()
+        name_matched_df['metric'] = name_matched_df['column_nr'].apply(lambda x: column_names[x])
+        name_matched_df = name_matched_df[['metric', 'index', 'score']]
+        logger.info("Matched column names: %s", name_matched_df)
+        return name_matched_df
+    except Exception as e:
+        logger.error("Error in match_names: %s", traceback.format_exc())
+        raise e
 
 
 def crca_sequential(data_arg, iterations_arg):
@@ -132,12 +149,12 @@ def crca_sequential(data_arg, iterations_arg):
     try:
         results = []
         for i in range(iterations_arg):
-            logging.info(f"Running iteration {i + 1} of {iterations_arg}")
+            logger.info("Running iteration %d of %d", i + 1, iterations_arg)
             result = crca(data_arg)
             results.append(result)
         return results
     except Exception as e:
-        logging.error("Error in crca_sequential: %s", str(e))
+        logger.error("Error in crca_sequential: %s", traceback.format_exc())
         raise e
 
 
@@ -151,8 +168,13 @@ def calculate_average(df):
     Returns:
     - pd.DataFrame: DataFrame with average scores.
     """
-    cumulative_df = df.groupby('column_nr')['score'].mean().reset_index().sort_values(by='score', ascending=False)
-    return cumulative_df
+    try:
+        logger.info("Calculating average scores")
+        cumulative_df = df.groupby('column_nr')['score'].mean().reset_index().sort_values(by='score', ascending=False)
+        return cumulative_df
+    except Exception as e:
+        logger.error("Error in calculate_average: %s", traceback.format_exc())
+        raise e
 
 
 def crca(data_arg):
@@ -167,6 +189,7 @@ def crca(data_arg):
     - str: Base64-encoded image data.
     """
     try:
+        logger.info("Starting CRCA algorithm")
         config = get_config()
         gamma_arg = config['arg_gamma']
         eta_arg = config['arg_eta']
@@ -177,17 +200,9 @@ def crca(data_arg):
         config['cuda'] = torch.cuda.is_available()
         config['factor'] = not config['no_factor']
 
-        # ================================================
-        # get data: experiments = {synthetic SEM, ALARM}
-        # ================================================
         train_data = data
 
-        # ===================================
-        # load modules
-        # ===================================
         # Generate off-diagonal interaction graph
-
-        # add adjacency matrix A
         num_nodes = data_variable_size
         adj_A = np.zeros((num_nodes, num_nodes))
 
@@ -228,9 +243,6 @@ def crca(data_arg):
                                  n_hid=config['decoder_hidden'],
                                  do_prob=config['decoder_dropout']).double()
 
-        # ===================================
-        # set up training parameters
-        # ===================================
         if config['optimizer'] == 'Adam':
             optimizer = optim.Adam(list(encoder.parameters()) + list(decoder.parameters()), lr=config['lr'])
         elif config['optimizer'] == 'LBFGS':
@@ -238,17 +250,13 @@ def crca(data_arg):
         elif config['optimizer'] == 'SGD':
             optimizer = optim.SGD(list(encoder.parameters()) + list(decoder.parameters()), lr=config['lr'])
 
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=config['lr_decay'],
-                                        gamma=config['gamma'])
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=config['lr_decay'], gamma=config['gamma'])
 
-        # Linear indices of an upper triangular mx, used for acc calculation
         triu_indices = get_triu_offdiag_indices(data_variable_size)
         tril_indices = get_tril_offdiag_indices(data_variable_size)
 
         if config['prior']:
             prior = np.array([0.91, 0.03, 0.03, 0.03])  # hard coded for now
-            print("Using prior")
-            print(prior)
             log_prior = torch.DoubleTensor(np.log(prior))
             log_prior = torch.unsqueeze(log_prior, 0)
             log_prior = torch.unsqueeze(log_prior, 0)
@@ -263,17 +271,16 @@ def crca(data_arg):
             triu_indices = triu_indices.cuda()
             tril_indices = tril_indices.cuda()
 
-        # compute constraint h(A) value
         def _h_A(A, m):
-            expm_A = matrix_poly(A*A, m)
+            expm_A = matrix_poly(A * A, m)
             h_A = torch.trace(expm_A) - m
             return h_A
 
         prox_plus = torch.nn.Threshold(0., 0.)
 
         def stau(w, tau):
-            w1 = prox_plus(torch.abs(w)-tau)
-            return torch.sign(w)*w1
+            w1 = prox_plus(torch.abs(w) - tau)
+            return torch.sign(w) * w1
 
         def update_optimizer(optimizer, original_lr, c_A):
             '''related LR to c_A, whenever c_A gets big, reduce LR proportionally'''
@@ -288,15 +295,11 @@ def crca(data_arg):
             else:
                 lr = estimated_lr
 
-            # set LR
             for parame_group in optimizer.param_groups:
                 parame_group['lr'] = lr
 
             return optimizer, lr
 
-        # ===================================
-        # training:
-        # ===================================
         def train(epoch, best_val_loss, lambda_A, c_A, optimizer):
             nll_train = []
             kl_train = []
@@ -306,11 +309,10 @@ def crca(data_arg):
             decoder.train()
             scheduler.step()
 
-            # update optimizer
             optimizer, lr = update_optimizer(optimizer, config['lr'], c_A)
 
             for i in range(1):
-                data = train_data[i*data_sample_size:(i+1)*data_sample_size]
+                data = train_data[i * data_sample_size:(i + 1) * data_sample_size]
                 data = torch.tensor(data.to_numpy().reshape(data_sample_size, data_variable_size, 1))
                 if config['cuda']:
                     data = data.cuda()
@@ -324,25 +326,20 @@ def crca(data_arg):
                                                             origin_A, adj_A_tilt_encoder, Wa)
 
                 if torch.sum(output != output):
-                    print('nan error\n')
+                    logger.error('NaN error encountered during training')
+                    raise ValueError('NaN error encountered during training')
 
                 target = data
                 preds = output
                 variance = 0.
 
-                # reconstruction accuracy loss
                 loss_nll = nll_gaussian(preds, target, variance)
-
-                # KL loss
                 loss_kl = kl_gaussian_sem(logits)
-
-                # ELBO loss:
                 loss = loss_kl + loss_nll
-                # add A loss
+
                 one_adj_A = origin_A
                 sparse_loss = config['tau_A'] * torch.sum(torch.abs(one_adj_A))
 
-                # other loss term
                 if config['use_A_connect_loss']:
                     connect_gap = A_connect_loss(one_adj_A, config['graph_threshold, z_gap'])
                     loss += lambda_A * connect_gap + 0.5 * c_A * connect_gap * connect_gap
@@ -351,19 +348,18 @@ def crca(data_arg):
                     positive_gap = A_positive_loss(one_adj_A, z_positive)
                     loss += .1 * (lambda_A * positive_gap + 0.5 * c_A * positive_gap * positive_gap)
 
-                # compute h(A)
                 h_A = _h_A(origin_A, data_variable_size)
-                loss += lambda_A * h_A + 0.5 * c_A * h_A * h_A + 100. * torch.trace(origin_A*origin_A) + sparse_loss
+                loss += lambda_A * h_A + 0.5 * c_A * h_A * h_A + 100. * torch.trace(origin_A * origin_A) + sparse_loss
 
                 loss.backward()
-                loss = optimizer.step()
+                optimizer.step()
 
-                myA.data = stau(myA.data, config['tau_A']*lr)
+                myA.data = stau(myA.data, config['tau_A'] * lr)
 
                 if torch.sum(origin_A != origin_A):
-                    print('nan error\n')
+                    logger.error('NaN error encountered during optimizer step')
+                    raise ValueError('NaN error encountered during optimizer step')
 
-                # compute metrics
                 graph = origin_A.data.clone().cpu().numpy()
                 graph[np.abs(graph) < config['graph_threshold']] = 0
 
@@ -373,10 +369,6 @@ def crca(data_arg):
 
             return np.mean(np.mean(kl_train) + np.mean(nll_train)), np.mean(nll_train), np.mean(mse_train), graph, origin_A
 
-        # ===================================
-        # main
-        # ===================================
-
         gamma = gamma_arg
         eta = eta_arg
 
@@ -384,7 +376,6 @@ def crca(data_arg):
         best_NLL_loss = np.inf
         best_MSE_loss = np.inf
         best_epoch = 0
-        # optimizer step on hyparameters
         c_A = config['c_A']
         lambda_A = config['lambda_A']
         h_A_new = torch.tensor(1.)
@@ -398,7 +389,7 @@ def crca(data_arg):
         start_time = time.time()
         try:
             for step_k in range(k_max_iter):
-                print("step_k: ", step_k, " ( of max", k_max_iter, ")")
+                logger.info("Running step %d of %d", step_k, k_max_iter)
                 while c_A < 1e+20:
                     for epoch in range(config['epochs']):
                         ELBO_loss, NLL_loss, MSE_loss, graph, origin_A = train(epoch, best_ELBO_loss,
@@ -421,7 +412,6 @@ def crca(data_arg):
                     if ELBO_loss > 2 * best_ELBO_loss:
                         break
 
-                    # update parameters
                     A_new = origin_A.data.clone()
                     h_A_new = _h_A(A_new, data_variable_size)
                     if h_A_new.item() > gamma * h_A_old:
@@ -429,15 +419,13 @@ def crca(data_arg):
                     else:
                         break
 
-                # update parameters
                 h_A_old = h_A_new.item()
                 lambda_A += c_A * h_A_new.item()
 
                 if h_A_new.item() <= h_tol:
                     break
 
-            print("Steps: {:04d}".format(step_k))
-            print("Best Epoch: {:04d}".format(best_epoch))
+            logger.info("Best Epoch: %d", best_epoch)
 
             graph = origin_A.data.clone().cpu().numpy()
             graph[np.abs(graph) < 0.1] = 0
@@ -445,10 +433,10 @@ def crca(data_arg):
             graph[np.abs(graph) < 0.3] = 0
 
         except KeyboardInterrupt:
-            print('Done!')
+            logger.info('Training interrupted by user')
 
         end_time = time.time()
-        print("Time spent: ", end_time-start_time)
+        logger.info("Time spent: %f seconds", end_time - start_time)
 
         adj = graph
         org_G = nx.from_numpy_matrix(adj, parallel_edges=True, create_using=nx.DiGraph)
@@ -456,36 +444,30 @@ def crca(data_arg):
         plt.figure(figsize=(8, 6))
         nx.draw(org_G, pos=pos, with_labels=True, node_color='skyblue', edge_color='k')
 
-        # Convert plot to PNG image byte data
         img_data = BytesIO()
         plt.savefig(img_data, format='png')
         img_data.seek(0)
 
-        # Encode PNG image to base64 string
         image_base64 = base64.b64encode(img_data.getvalue()).decode('utf-8')
 
-        # PageRank
         pagerank = PageRank()
         scores = pagerank.fit_transform(np.abs(adj.T))
 
-        score_dict = {}
-        for i, s in enumerate(scores):
-            score_dict[i] = s
+        score_dict = {i: s for i, s in enumerate(scores)}
         sorted_dict = sorted(score_dict.items(), key=lambda item: item[1], reverse=True)
         for i in range(0, len(sorted_dict), 3):
-            # Print the current index and the corresponding value if the index is within the bounds of the list
             if i < len(sorted_dict):
-                print(i+1, sorted_dict[i], end="\t")
-            if i+1 < len(sorted_dict):
-                print(i+2, sorted_dict[i+1], end="\t")
-            if i+2 < len(sorted_dict):
-                print(i+3, sorted_dict[i+2])
+                logger.info(f"{i + 1}: {sorted_dict[i]}")
+            if i + 1 < len(sorted_dict):
+                logger.info(f"{i + 2}: {sorted_dict[i + 1]}")
+            if i + 2 < len(sorted_dict):
+                logger.info(f"{i + 3}: {sorted_dict[i + 2]}")
 
-        # save scores to csv file
         df = pd.DataFrame(sorted_dict)
         df.columns = ['column_nr', 'score']
 
+        logger.info("CRCA algorithm completed successfully")
         return df, image_base64
     except Exception as e:
-        logging.error("Error in crca: %s", str(e))
+        logger.error("Error in crca: %s", traceback.format_exc())
         raise e
