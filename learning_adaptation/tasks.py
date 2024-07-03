@@ -86,11 +86,6 @@ def train_and_evaluate_task(self, train_array, test_array, anomaly_label_array, 
         self.update_state(state='EVALUATING', meta='Evaluating the model')
 
         logger.info("Starting the evaluation process.")
-        # testing purposes
-        # # Load model_config from trained_models_temp/SMD_1-1_30062024_095123 directory
-        # model_dir = "trained_models_temp/SMD_1-1_01072024_152236"
-        # with open(f"{model_dir}/model_config.json", "r") as f:
-        #     model_config = json.load(f)
 
         # Evaluate the model
         predict_and_evaluate(

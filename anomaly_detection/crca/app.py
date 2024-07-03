@@ -231,8 +231,8 @@ def update_config():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-# if __name__ == '__main__':
-#     logger.info("Initializing configuration")
-#     set_initial_config()
-#     logger.info("Starting Flask app")
-#     app.run(debug=False, host='0.0.0.0', port=5023)
+if __name__ == '__main__':
+    logger.info("Initializing configuration")
+    set_initial_config()
+    logger.info("Starting Flask app")
+    app.run(debug=False, host='0.0.0.0', port=5023)
