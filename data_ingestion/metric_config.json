@@ -110,5 +110,29 @@
   "pod_network_dropped_packets": {
     "query": "sum(rate(container_network_receive_packets_dropped_total{{pod=\"{pod}\"}}[1m])) by (pod)",
     "info": "Network dropped packets"
+  },
+  "pod_memory_working_set": {
+    "query": "sum(container_memory_working_set_bytes{{pod=\"{pod}\"}}) by (pod)",
+    "info": "Memory working set"
+  },
+  "pod_cpu_usage_seconds": {
+    "query": "sum(rate(container_cpu_usage_seconds_total{{pod=\"{pod}\"}}[5m])) by (pod)",
+    "info": "CPU usage in seconds"
+  },
+  "pod_cpu_usage_percentage": {
+    "query": "(sum(rate(container_cpu_usage_seconds_total{{pod=\"{pod}\"}}[1m])) by (pod)) / (sum(kube_pod_container_resource_limits_cpu_cores{{pod=\"{pod}\"}}) by (pod)) * 100",
+    "info": "CPU usage percentage"
+  },
+  "pod_memory_usage_percentage": {
+    "query": "(sum(container_memory_usage_bytes{{pod=\"{pod}\"}}) by (pod)) / (sum(kube_pod_container_resource_limits_memory_bytes{{pod=\"{pod}\"}}) by (pod)) * 100",
+    "info": "Memory usage percentage"
+  },
+  "pod_container_restarts": {
+    "query": "sum(rate(kube_pod_container_status_restarts_total{{pod=\"{pod}\"}}[5m])) by (container)",
+    "info": "Container restarts within pods"
+  },
+  "pod_container_oom_kills": {
+    "query": "sum(rate(kube_pod_container_status_oomkilled{{pod=\"{pod}\"}}[5m])) by (container)",
+    "info": "Container OOM kills within pods"
   }
 }

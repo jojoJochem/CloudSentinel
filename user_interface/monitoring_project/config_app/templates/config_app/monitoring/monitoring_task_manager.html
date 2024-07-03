@@ -76,7 +76,7 @@
 
     async function stopTask(taskId) {
         try {
-            const response = await fetch(`/stop_task/${taskId}/`, {
+            const response = await fetch(`/stop-task/${taskId}/`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json'
@@ -175,8 +175,7 @@
     }
 
     async function deleteResult(taskId) {
-        const crcaUrl = "{{ crcaUrl|escapejs }}"; // Ensure crcaUrl is correctly escaped for JavaScript context
-        const url = `/delete_result/${taskId}/${crcaUrl}/`;
+        const url = `/delete-result/${taskId}/`;
 
         try {
             const response = await fetch(url, {

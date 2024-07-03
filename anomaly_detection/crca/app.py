@@ -170,8 +170,11 @@ def delete_results(task_id):
     """
     try:
         logger.info(f"Received request to delete results for task_id: {task_id}")
-        shutil.rmtree('results/'+task_id)  # Delete directory recursively
-        logger.info(f"Results deleted for task_id: {task_id}")
+        if os.path.exists('results/'+task_id):
+            shutil.rmtree('results/'+task_id)
+            logger.info(f"Results deleted for task_id: {task_id}")
+        else:
+            logger.info(f"No results found for task_id: {task_id}")
         return jsonify({"success": True}), 200
 
     except Exception as e:
