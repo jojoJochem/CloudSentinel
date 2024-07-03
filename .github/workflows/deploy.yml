@@ -24,18 +24,18 @@ jobs:
 
     - name: Build and push Docker images
       run: |
-        # docker build -t ${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest -f data_ingestion/Dockerfile data_ingestion/
-        # docker build -t ${{ secrets.DOCKER_USERNAME }}/data_processing:latest -f data_processing/Dockerfile data_processing/
-        # docker build -t ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_cgnn:latest -f anomaly_detection/cgnn/Dockerfile anomaly_detection/cgnn/
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest -f data_ingestion/Dockerfile data_ingestion/
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/data_processing:latest -f data_processing/Dockerfile data_processing/
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_cgnn:latest -f anomaly_detection/cgnn/Dockerfile anomaly_detection/cgnn/
         docker build -t ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest -f anomaly_detection/crca/Dockerfile anomaly_detection/crca/
-        # docker build -t ${{ secrets.DOCKER_USERNAME }}/learning_adaptation:latest -f learning_adaptation/Dockerfile learning_adaptation/
-        # docker build -t ${{ secrets.DOCKER_USERNAME }}/monitoring_project:latest -f user_interface/monitoring_project/Dockerfile user_interface/monitoring_project/
-        # docker push ${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest
-        # docker push ${{ secrets.DOCKER_USERNAME }}/data_processing:latest
-        # docker push ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_cgnn:latest
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/learning_adaptation:latest -f learning_adaptation/Dockerfile learning_adaptation/
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/monitoring_project:latest -f user_interface/monitoring_project/Dockerfile user_interface/monitoring_project/
+        docker push ${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/data_processing:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_cgnn:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest
-        # docker push ${{ secrets.DOCKER_USERNAME }}/learning_adaptation:latest
-        # docker push ${{ secrets.DOCKER_USERNAME }}/monitoring_project:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/learning_adaptation:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/monitoring_project:latest
 
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v0

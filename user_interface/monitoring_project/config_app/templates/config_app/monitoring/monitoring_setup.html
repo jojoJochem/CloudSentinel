@@ -29,7 +29,7 @@
                         </div>
                         <br>
                         <h5>Ranked Features</h5>
-                        <table class="table table-striped table-hover" id="rankedFeaturesTable">
+                        <table class="table table-striped table-hover" id="rankedFeaturesTable-{{ model }}">
                             <thead>
                                 <tr>
                                     <th>Feature</th>
@@ -109,6 +109,8 @@
                     var details = document.getElementById('details-' + model);
                     if (details.style.display === 'none') {
                         details.style.display = 'block';
+                        const table = details.querySelector("table[id^=rankedFeaturesTable]");
+                        sortTableByImportance(table);
                     } else {
                         details.style.display = 'none';
                     }
@@ -142,40 +144,9 @@
                     toggleOverlay();
                 }
 
-                document.addEventListener('DOMContentLoaded', function () {
-                    document.getElementById('monitoring-form').addEventListener('submit', function (event) {
-                        event.preventDefault();
+                function sortTableByImportance(table) {
+                    if (!table) return;
 
-                        var formData = new FormData(this);
-                        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-                        fetch("{% url 'monitoring' %}", {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': csrfToken
-                            },
-                            body: formData
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.status === 'success') {
-                                window.location.href = "{% url 'monitoring_overview' %}";
-                            } else {
-                                alert('Failed to start monitoring: ' + data.message);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                        });
-                    });
-                });
-
-                document.addEventListener("DOMContentLoaded", function() {
-                    sortTableByImportance();
-                });
-
-                function sortTableByImportance() {
-                    const table = document.getElementById("rankedFeaturesTable");
                     const rows = Array.from(table.querySelectorAll("tbody tr"));
 
                     rows.sort((a, b) => {
