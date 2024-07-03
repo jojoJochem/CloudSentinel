@@ -30,13 +30,11 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const fetchResultsUrl = "{% url 'fetch_cgnn_results' %}";
-        const fetchCrcaTaskDetailsUrl = "{% url 'fetch_crca_task_details' %}";
         let chartInstance = null;
         let allResults = {};
 
         async function fetchResults() {
-            const response = await fetch(fetchResultsUrl, {
+            const response = await fetch('/fetch-cgnn-results/', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -123,7 +121,7 @@
         }
 
         async function fetchAndDisplayCrcaTaskDetails(taskId) {
-            const response = await fetch(`${fetchCrcaTaskDetailsUrl}?task_id=${taskId}`, {
+            const response = await fetch(`/fetch-crca-task-details/${taskId}/`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'

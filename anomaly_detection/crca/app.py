@@ -146,9 +146,14 @@ def get_results(task_id):
     """
     try:
         logger.info(f"Received request to get results for task_id: {task_id}")
-        with open('results/'+task_id+'/crca_results.json', 'r') as f:
-            data = json.load(f)
-        logger.info(f"Results retrieved for task_id: {task_id}")
+        path = 'results/'+task_id+'/crca_results.json'
+        if os.path.exists(path):
+            with open('results/'+task_id+'/crca_results.json', 'r') as f:
+                data = json.load(f)
+            logger.info(f"Results retrieved for task_id: {task_id}")
+        else:
+            data = {"error": "Results not found"}
+            logger.info(f"No results found for task_id: {task_id}")
         return jsonify(data), 200
 
     except Exception as e:

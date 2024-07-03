@@ -204,10 +204,9 @@ def fetch_cgnn_results(request):
 
 
 @csrf_exempt
-def fetch_crca_task_details(request):
-    task_id = request.GET.get('task_id')
+def fetch_crca_task_details(request, taskId):
     try:
-        response = requests.get(f'{settings.API_CRCA_ANOMALY_DETECTION_URL}/results/{task_id}')
+        response = requests.get(f'{settings.API_CRCA_ANOMALY_DETECTION_URL}/results/{taskId}')
         response.raise_for_status()
         return JsonResponse(response.json())
     except requests.RequestException as e:

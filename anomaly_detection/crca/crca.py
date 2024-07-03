@@ -81,7 +81,7 @@ def return_json_object(df, image_base64, crca_info, task_id):
     # Prepare response data
     csv_payload = df.to_csv(index=False)
     response_data = {
-        'containers': crca_info['data']['containers'],
+        'containers': crca_info['data']['crca_pods'],
         'metrics': crca_info['data']['metrics'],
         'ranking': csv_payload,
         'graph_image': image_base64
@@ -108,7 +108,7 @@ def match_names(df_concat, crca_info):
     """
     # Add index column and match container and metric names
     df_concat['index'] = df_concat['column_nr'].astype(int)
-    selected_containers = crca_info['data']['containers']
+    selected_containers = crca_info['data']['crca_pods']
     selected_metrics = crca_info['data']['metrics']
     column_names = [f"{container}_{metric}" for container in selected_containers for metric in selected_metrics]
     name_matched_df = df_concat.copy()
