@@ -23,12 +23,12 @@ CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all routes
 os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
 # Configure and initialize Celery instance
-app.config['broker_url'] = 'redis://redis:6379/1'
-app.config['result_backend'] = 'redis://redis:6379/1'
+# app.config['broker_url'] = 'redis://redis:6379/1'
+# app.config['result_backend'] = 'redis://redis:6379/1'
 
 # testing purposes
-# app.config['broker_url'] = 'redis://localhost:6379/1'
-# app.config['result_backend'] = 'redis://localhost:6379/1'
+app.config['broker_url'] = 'redis://localhost:6379/1'
+app.config['result_backend'] = 'redis://localhost:6379/1'
 
 celery = Celery(app.import_name, backend=app.config['result_backend'], broker=app.config['broker_url'])
 celery.conf.update(app.config)
@@ -59,6 +59,7 @@ def run_crca_task(self, crca_data_json, crca_info):
         task_id = self.request.id
 
         response_data = run_crca(crca_data, crca_info, task_id)
+        logger.info(response_data)
         return response_data
     except Exception as e:
         logger.error(traceback.format_exc())
@@ -177,12 +178,15 @@ def get_results(task_id):
         logger.info(f"Received request to get results for task_id: {task_id}")
         task = run_crca_task.AsyncResult(task_id)
 
+        logger.info(f"Task state for task_id {task_id}: {task.state}")
+
         if task.state == 'SUCCESS':
+            logger.info(f"Task result for task_id {task_id}: {task.result}")
             save_crca(task.result, task_id)
             data = task.result
             logger.info(f"Results retrieved and saved for task_id: {task_id}")
         else:
-            data = {"error": "Results not available"}
+            data = {"error": "Results not available yet or task failed"}
             logger.info(f"No results found for task_id: {task_id}")
 
         return jsonify(data), 200
@@ -190,6 +194,7 @@ def get_results(task_id):
     except Exception as e:
         logger.error(f"Error retrieving results for task_id {task_id}: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
+
 
 
 @app.route('/delete_results/<task_id>', methods=['DELETE'])
