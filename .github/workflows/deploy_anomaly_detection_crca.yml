@@ -1,0 +1,48 @@
+# name: Anomaly Detection CRCA Deployment
+
+# on:
+#   push:
+#     paths:
+#       - 'anomaly_detection/crca/**'
+
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v3
+
+#     - name: Log in to Docker Hub
+#       uses: docker/login-action@v3
+#       with:
+#         username: ${{ secrets.DOCKER_USERNAME }}
+#         password: ${{ secrets.DOCKER_PASSWORD }}
+
+#     - name: Set up Docker Buildx
+#       uses: docker/setup-buildx-action@v3
+
+#     - name: Build and push Docker image
+#       run: |
+#         docker build -t ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest -f anomaly_detection/crca/Dockerfile anomaly_detection/crca/
+#         docker push ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest
+
+#     - name: Set up Google Cloud SDK
+#       uses: google-github-actions/setup-gcloud@v0
+#       with:
+#         version: 'latest'
+#         service_account_key: ${{ secrets.GCP_SA_KEY }}
+#         export_default_credentials: true
+
+#     - name: Configure kubectl
+#       run: |
+#         gcloud container clusters get-credentials cscluster --zone us-central1-a --project cloudsentinel-427513
+
+#     - name: Deploy to Kubernetes
+#       run: |
+#         kubectl apply -f k8s/crca_anomaly_detection-deployment.yml
+#         kubectl apply -f k8s/crca_anomaly_detection-celery-deployment.yml
+#         kubectl set image deployment/crca-anomaly-detection-deployment crca-anomaly-detection=${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest -n cloudsentinel
+#         kubectl set image deployment/crca-anomaly-detection-celery-deployment crca-anomaly-detection-celery=${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest -n cloudsentinel
+#         kubectl rollout restart deployment crca-anomaly-detection-deployment -n cloudsentinel
+#         kubectl rollout restart deployment crca-anomaly-detection-celery-deployment -n cloudsentinel

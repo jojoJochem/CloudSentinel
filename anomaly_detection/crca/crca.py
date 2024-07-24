@@ -35,6 +35,7 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+
 def run_crca(crca_data, crca_info, task_id, parallel=False):
     """
     Run the CRCA (Causal Relation Extraction) algorithm.

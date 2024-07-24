@@ -1,0 +1,33 @@
+{
+  "dataset": "SMD_2-6",
+  "comment": null,
+  "containers": [
+    "container_1",
+    "container_2"
+  ],
+  "metrics": [
+    "cpu_usage_pods",
+    "memory_usage_pods",
+    "cpu_limit_pods",
+    "memory_limit_pods",
+    "cpu_requests_pods",
+    "memory_requests_pods",
+    "cpu_usage_pods__",
+    "pod_restarts",
+    "pod_status_running",
+    "pod_status_pending",
+    "pod_status_failed",
+    "pod_status_succeeded",
+    "disk_io_operations",
+    "network_io_bytes_received",
+    "network_io_bytes_transmitted",
+    "pod_evictions",
+    "pod_uptime",
+    "pods_by_node",
+    "pod_cpu_throttling"
+  ],
+  "step_size": 60,
+  "duration": 179220,
+  "anomaly_sequence": false,
+  "data_entries": 28743
+}

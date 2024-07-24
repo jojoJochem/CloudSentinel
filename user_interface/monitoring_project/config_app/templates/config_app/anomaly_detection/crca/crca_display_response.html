@@ -8,7 +8,7 @@
 
     <h2>Graph Images</h2>
     {% for image in graph_images %}
-        <img src="data:image/png;base64,{{ image }}" alt="Graph Image" class="img-fluid mb-3" />
+        <img src="data:image/png;base64,{{ image }}" alt="Graph Image" class="img-fluid mb-3" style="max-width: 100%; height: auto;" />
     {% endfor %}
 
     <h2>CSV Data</h2>

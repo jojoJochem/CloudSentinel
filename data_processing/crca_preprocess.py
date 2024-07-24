@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import json
 from flask import Response
+from chardet import detect
 
 def handle_crca_request(crca_file, crca_info):
     """
@@ -28,17 +29,51 @@ def handle_crca_request(crca_file, crca_info):
 
     return flask_response
 
-def normalize_data(csv):
+
+def detect_encoding(file):
+    raw_data = file.read()
+    result = detect(raw_data)
+    file.seek(0)  # Reset file pointer to the beginning
+    return result['encoding']
+
+
+def has_header(df):
+    return any(isinstance(col, str) for col in df.columns)
+
+
+def normalize_data(file):
     """
-    Normalizes the data in the CSV file using MinMaxScaler.
+    Normalizes the data in the CSV or PKL file using MinMaxScaler.
 
     Args:
-        csv (FileStorage): The CSV file containing the data to be normalized.
+        file (FileStorage): The file containing the data to be normalized.
 
     Returns:
         str: A CSV formatted string of the normalized data.
     """
-    df = pd.read_csv(csv, header=None)
+    file_extension = file.filename.rsplit('.', 1)[1].lower()
+    if file_extension not in ['csv', 'pkl', 'txt']:
+        raise ValueError("Unsupported file type. Only CSV, PKL, and TXT files are supported.")
+
+    encoding = detect_encoding(file)
+
+    if file_extension == 'csv' or file_extension == 'txt':
+        # Try to read the first row to check for a header
+        first_row = pd.read_csv(file, nrows=1, encoding=encoding)
+        file.seek(0)  # Reset file pointer to the beginning
+
+        if has_header(first_row):
+            # The first row contains headers
+            df = pd.read_csv(file, header=0, encoding=encoding)
+        else:
+            # The first row does not contain headers
+            df = pd.read_csv(file, header=None, encoding=encoding)
+    elif file_extension == 'pkl':
+        df = pd.read_pickle(file)
+        if has_header(df):
+            df.columns = range(df.shape[1])  # Remove the header by resetting column names
+
+    print(df)
     scaler = MinMaxScaler()
     df_normalized = scaler.fit_transform(df)
     return pd.DataFrame(df_normalized).to_csv(index=False, header=False)

@@ -6,10 +6,10 @@ import traceback
 import shutil
 import pandas as pd
 from flask_cors import CORS
-from celery import Celery, signals
+from celery import Celery
+from tasks import run_crca_task  # Import the task here
 
 from config import set_config, get_config, set_initial_config
-from crca import run_crca
 
 # Set multiprocessing start method to 'spawn' for Celery compatibility
 import multiprocessing
@@ -23,12 +23,12 @@ CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all routes
 os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
 # Configure and initialize Celery instance
-# app.config['broker_url'] = 'redis://redis:6379/1'
-# app.config['result_backend'] = 'redis://redis:6379/1'
+app.config['broker_url'] = 'redis://redis:6379/1'
+app.config['result_backend'] = 'redis://redis:6379/1'
 
 # testing purposes
-app.config['broker_url'] = 'redis://localhost:6379/1'
-app.config['result_backend'] = 'redis://localhost:6379/1'
+# app.config['broker_url'] = 'redis://localhost:6379/1'
+# app.config['result_backend'] = 'redis://localhost:6379/1'
 
 celery = Celery(app.import_name, backend=app.config['result_backend'], broker=app.config['broker_url'])
 celery.conf.update(app.config)
@@ -39,31 +39,6 @@ logger = logging.getLogger(__name__)
 
 # Command to run the Celery worker:
 # celery -A app.celery worker --loglevel=info -P gevent
-
-
-@celery.task(bind=True)
-def run_crca_task(self, crca_data_json, crca_info):
-    """
-    Celery task to perform crca.
-
-    Args:
-        self (Task): The Celery task instance.
-        crca_data_json (dict): Data to perform crca on.
-        crca_info (dict): Information required for crca.
-
-    Returns:
-        dict: CRCA results
-    """
-    try:
-        crca_data = pd.read_json(crca_data_json, orient='split')
-        task_id = self.request.id
-
-        response_data = run_crca(crca_data, crca_info, task_id)
-        logger.info(response_data)
-        return response_data
-    except Exception as e:
-        logger.error(traceback.format_exc())
-        raise self.retry(exc=e, countdown=60)
 
 
 def save_crca(response_data, task_id):
@@ -194,33 +169,58 @@ def get_results(task_id):
     except Exception as e:
         logger.error(f"Error retrieving results for task_id {task_id}: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
+# @app.route('/results/<task_id>', methods=['GET'])
+# def get_results(task_id):
+#     """
+#     Endpoint to retrieve results of a specific CRCA task identified by task_id.
 
+#     Expects:
+#     - task_id: Unique identifier of the task whose results are to be retrieved.
 
+#     Returns:
+#     - JSON response with CRCA results.
+#     - Error response if the task_id does not exist or an exception occurs.
+#     """
+#     try:
+#         logger.info(f"Received request to get results for task_id: {task_id}")
+#         path = 'results/'+str(task_id)
+#         if os.path.exists(path):
+#             with open(path + '/crca_results.json', 'r') as f:
+#                 data = json.load(f)
+#             logger.info(f"Results retrieved for task_id: {task_id}")
+#         else:
+#             data = {"error": "Results not found"}
+#             logger.info(f"No results found for task_id: {task_id}")
+#         return jsonify(data), 200
 
-@app.route('/delete_results/<task_id>', methods=['DELETE'])
-def delete_results(task_id):
-    """
-    Endpoint to delete results associated with a specific CRCA task identified by task_id.
+#     except Exception as e:
+#         logger.error(f"Error retrieving results for task_id {task_id}: {traceback.format_exc()}")
+#         return jsonify({"error": str(e)}), 500
 
-    Expects:
-    - task_id: Unique identifier of the task whose results are to be deleted.
+# @app.route('/delete_results/<task_id>', methods=['DELETE'])
+# def delete_results(task_id):
+#     """
+#     Endpoint to delete results associated with a specific CRCA task identified by task_id.
 
-    Returns:
-    - JSON response indicating success upon successful deletion.
-    - Error response if the task_id does not exist or an exception occurs.
-    """
-    try:
-        logger.info(f"Received request to delete results for task_id: {task_id}")
-        if os.path.exists('results/'+task_id):
-            shutil.rmtree('results/'+task_id)
-            logger.info(f"Results deleted for task_id: {task_id}")
-        else:
-            logger.info(f"No results found for task_id: {task_id}")
-        return jsonify({"success": True}), 200
+#     Expects:
+#     - task_id: Unique identifier of the task whose results are to be deleted.
 
-    except Exception as e:
-        logger.error(f"Error deleting results for task_id {task_id}: {traceback.format_exc()}")
-        return jsonify({"error": str(e)}), 500
+#     Returns:
+#     - JSON response indicating success upon successful deletion.
+#     - Error response if the task_id does not exist or an exception occurs.
+#     """
+#     try:
+#         logger.info(f"Received request to delete results for task_id: {task_id}")
+#         if os.path.exists('results/'+task_id):
+#             shutil.rmtree('results/'+task_id)
+#             logger.info(f"Results deleted for task_id: {task_id}")
+#         else:
+#             logger.info(f"No results found for task_id: {task_id}")
+#         return jsonify({"success": True}), 200
+
+#     except Exception as e:
+#         logger.error(f"Error deleting results for task_id {task_id}: {traceback.format_exc()}")
+#         return jsonify({"error": str(e)}), 500
 
 
 @app.route('/get_config', methods=['GET'])

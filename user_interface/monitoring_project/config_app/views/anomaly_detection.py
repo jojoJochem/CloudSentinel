@@ -186,7 +186,7 @@ def upload_crca_data(request):
 
         crca_data = {
             'metrics': metrics,
-            'containers': containers
+            'crca_pods': containers
         }
         crca_info = {
             'settings': get_settings(),

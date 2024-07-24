@@ -31,8 +31,8 @@
                 <div class="mb-3">
                     <label for="containerInput" class="form-label">Add Container:</label>
                     <div class="input-group">
-                        <input type="text" class="form-control" id="containerInput">
-                        <button type="button" class="btn btn-primary" onclick="addContainer()">Add Container</button>
+                        <input type="text" class="form-control" id="containerInput" placeholder="Enter containers separated by commas (or one by one)">
+                        <button type="button" class="btn btn-primary" onclick="addContainers()">Add Container</button>
                     </div>
                 </div>
                 <div id="containersContainer" class="mb-3"></div>
@@ -75,32 +75,36 @@
         updateHiddenInput('selectedMetrics', 'metric-box', 'metric');
     }
 
-    function addContainer() {
+    function addContainers() {
         const containerInput = document.getElementById('containerInput');
-        const containerName = containerInput.value.trim();
+        const containerNames = containerInput.value.trim().split(',');
         const containersContainer = document.getElementById('containersContainer');
 
-        if (!containerName) {
-            return;
-        }
+        containerNames.forEach(containerName => {
+            containerName = containerName.trim();
+            if (!containerName) {
+                return;
+            }
 
-        const containerBox = document.createElement('div');
-        containerBox.className = 'container-box mb-2';
-        containerBox.dataset.container = containerName;
-        containerBox.innerHTML = `
-            <div class="card">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <span>${containerName}</span>
-                    <div>
-                        <button type="button" class="btn btn-sm btn-secondary me-1" onclick="moveUp(this, 'container-box')">↑</button>
-                        <button type="button" class="btn btn-sm btn-secondary me-1" onclick="moveDown(this, 'container-box')">↓</button>
-                        <button type="button" class="btn btn-sm btn-danger" onclick="removeElement(this, 'container-box')">Remove</button>
+            const containerBox = document.createElement('div');
+            containerBox.className = 'container-box mb-2';
+            containerBox.dataset.container = containerName;
+            containerBox.innerHTML = `
+                <div class="card">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <span>${containerName}</span>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-secondary me-1" onclick="moveUp(this, 'container-box')">↑</button>
+                            <button type="button" class="btn btn-sm btn-secondary me-1" onclick="moveDown(this, 'container-box')">↓</button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeElement(this, 'container-box')">Remove</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
 
-        containersContainer.appendChild(containerBox);
+            containersContainer.appendChild(containerBox);
+        });
+
         containerInput.value = '';
         updateHiddenInput('containers', 'container-box', 'container');
     }
