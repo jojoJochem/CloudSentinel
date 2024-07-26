@@ -28,7 +28,7 @@
   "metrics": [
     "cpu_usage_pods",
     "memory_usage_pods",
-    "cpu_limit_pods"
+    "pod_status_pending"
   ],
   "print_every": 1,
   "q": 0.001,

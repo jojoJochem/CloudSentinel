@@ -37,6 +37,20 @@ spec:
         - name: CLUSTER_NAMESPACE
           value: "cloudsentinel"
 ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: monitoring-project-service
+#   namespace: cloudsentinel
+# spec:
+#   selector:
+#     app: monitoring-project
+#   ports:
+#     - protocol: TCP
+#       port: 80
+#       targetPort: 8000
+#   type: LoadBalancer
+#   loadBalancerIP: 34.44.116.210
 apiVersion: v1
 kind: Service
 metadata:
@@ -49,5 +63,5 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8000
-  type: LoadBalancer
-  loadBalancerIP: 34.44.116.210
+      nodePort: 30000
+  type: NodePort
