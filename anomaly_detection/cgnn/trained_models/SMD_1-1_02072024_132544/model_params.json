@@ -10,7 +10,7 @@
   "metrics": [
     "cpu_usage_pods",
     "memory_usage_pods",
-    "cpu_limit_pods"
+    "pod_status_pending"
   ],
   "ranked_features": {
     "container_1_cpu_limit_pods": 0.021397707742106104,
