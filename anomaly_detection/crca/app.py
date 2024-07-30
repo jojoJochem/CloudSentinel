@@ -23,12 +23,12 @@ CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all routes
 os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
 # Configure and initialize Celery instance
-app.config['broker_url'] = 'redis://redis:6379/1'
-app.config['result_backend'] = 'redis://redis:6379/1'
+# app.config['broker_url'] = 'redis://redis:6379/1'
+# app.config['result_backend'] = 'redis://redis:6379/1'
 
 # testing purposes
-# app.config['broker_url'] = 'redis://localhost:6379/1'
-# app.config['result_backend'] = 'redis://localhost:6379/1'
+app.config['broker_url'] = 'redis://localhost:6379/1'
+app.config['result_backend'] = 'redis://localhost:6379/1'
 
 celery = Celery(app.import_name, backend=app.config['result_backend'], broker=app.config['broker_url'])
 celery.conf.update(app.config)
