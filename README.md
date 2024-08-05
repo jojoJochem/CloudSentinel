@@ -32,6 +32,7 @@ This README provides instructions for deploying the CloudSentinel application. T
     mkdir -p $HOME/.kube
     sudo minikube kubectl -- config view --raw > $HOME/.kube/config
     sudo chown $(id -u):$(id -g) $HOME/.kube/config
+    minikube update-context
     ```
 
 4. **Install curl (if not already installed)**
