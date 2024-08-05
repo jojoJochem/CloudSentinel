@@ -123,8 +123,6 @@ This README provides instructions for deploying the CloudSentinel application. T
     kubectl apply -f learning_adaptation-deployment.yml
     kubectl apply -f learning_adaptation-celery-deployment.yml
     kubectl apply -f monitoring_project-deployment.yml
-
-    kubectl create namespace cloudsentinel || true
     ```
 
 11. **Set Images for Deployments (using Minikube's Docker Registry)**

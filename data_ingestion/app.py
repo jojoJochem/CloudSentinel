@@ -8,6 +8,7 @@ from celery import Celery
 from kubernetes import client, config
 from flask_cors import CORS
 from celery.schedules import schedule
+import uuid
 
 from data_collector import collect_crca_data, fetch_metrics
 from config import set_initial_metric_config, get_config, set_config
@@ -31,21 +32,11 @@ celery.conf.update(app.config)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Command to run the Celery worker:
-# celery -A app.celery worker --loglevel=info
-
 
 @celery.task(bind=True)
 def monitoring_task(self, monitor_info):
     """
     Celery task to perform monitoring.
-
-    Args:
-        self (Task): The Celery task instance.
-        monitor_info (dict): Information required for monitoring.
-
-    Returns:
-        None
     """
     try:
         end_time = int(time.time())
@@ -59,7 +50,7 @@ def monitoring_task(self, monitor_info):
         logger.info(f"Sending data for task {self.request.id}")
         requests.post(f"{monitor_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_data",
                       files=test_files, data={'test_info': monitor_info_json})
-    except Exception:
+    except Exception as e:
         logger.error(f"Error in monitoring task {self.request.id}: {traceback.format_exc()}")
 
 
@@ -76,9 +67,15 @@ def start_monitoring():
         monitor_info = json.loads(monitor_info_json)
         test_interval = monitor_info['data']['test_interval']
 
+        # Generate a unique task_id if it doesn't exist
+        if 'task_id' not in monitor_info:
+            monitor_info['task_id'] = str(uuid.uuid4())
+
+        task_id = monitor_info['task_id']
+
         # Schedule the periodic task
         celery.conf.beat_schedule = {
-            f'monitoring-task-{monitor_info["task_id"]}': {
+            f'monitoring-task-{task_id}': {
                 'task': 'app.monitoring_task',
                 'schedule': schedule(run_every=test_interval * 60),
                 'args': (monitor_info,)
@@ -87,7 +84,7 @@ def start_monitoring():
         celery.conf.timezone = 'UTC'
 
         logger.info(f"Monitoring task scheduled with interval {test_interval} minutes")
-        return jsonify({'status': 'monitoring_scheduled', 'task_id': monitor_info["task_id"]}), 200
+        return jsonify({'status': 'monitoring_scheduled', 'task_id': task_id}), 200
     except Exception as e:
         logger.error(f"Error starting monitoring task: {traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
