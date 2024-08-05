@@ -20,7 +20,7 @@ import os
 # globals().update(dynamic_config)
 # ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
 
-# # testing purposes
+# testing purposes
 # API_DATA_INGESTION_URL = "http://127.0.0.1:5001"
 # API_DATA_PROCESSING_URL = "http://127.0.0.1:5002"
 # API_CRCA_ANOMALY_DETECTION_URL = "http://127.0.0.1:5023"

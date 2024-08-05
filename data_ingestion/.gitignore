@@ -1,3 +1,4 @@
 /env_data_ingestion
 /prometheus_setup
 **/__pycache__
+app copy.py
