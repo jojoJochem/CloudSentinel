@@ -125,7 +125,7 @@ This README provides instructions for deploying the CloudSentinel application. T
     kubectl apply -f monitoring_project-deployment.yml
     ```
 
-11. **xpose the Monitoring Project Service**
+11. **Expose the Monitoring Project Service**
 
     ```bash
     kubectl port-forward svc/monitoring-project-service 30000:80 -n cloudsentinel

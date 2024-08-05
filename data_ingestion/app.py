@@ -50,7 +50,7 @@ def monitoring_task(self, monitor_info):
         logger.info(f"Sending data for task {self.request.id}")
         requests.post(f"{monitor_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_data",
                       files=test_files, data={'test_info': monitor_info_json})
-    except Exception as e:
+    except Exception:
         logger.error(f"Error in monitoring task {self.request.id}: {traceback.format_exc()}")
 
 
