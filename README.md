@@ -123,20 +123,12 @@ This README provides instructions for deploying the CloudSentinel application. T
     kubectl apply -f learning_adaptation-deployment.yml
     kubectl apply -f learning_adaptation-celery-deployment.yml
     kubectl apply -f monitoring_project-deployment.yml
-
-    kubectl create namespace cloudsentinel || true
     ```
 
-11. **Set Images for Deployments (using Minikube's Docker Registry)**
+11. **xpose the Monitoring Project Service**
 
     ```bash
-    kubectl set image deployment/data-ingestion-deployment data-ingestion=$DOCKER_USERNAME/data_ingestion:latest -n cloudsentinel
-    kubectl set image deployment/celery-worker-deployment celery-worker=$DOCKER_USERNAME/data_ingestion:latest -n cloudsentinel
-    kubectl set image deployment/data-processing-deployment data-processing=$DOCKER_USERNAME/data_processing:latest -n cloudsentinel
-    kubectl set image deployment/cgnn-anomaly-detection-deployment cgnn-anomaly-detection=$DOCKER_USERNAME/anomaly_detection_cgnn:latest -n cloudsentinel
-    kubectl set image deployment/crca-anomaly-detection-deployment crca-anomaly-detection=$DOCKER_USERNAME/anomaly_detection_crca:latest -n cloudsentinel
-    kubectl set image deployment/crca-anomaly-detection-celery-deployment crca-anomaly-detection-celery=$DOCKER_USERNAME/anomaly_detection_crca:latest -n cloudsentinel
-    kubectl set image deployment/learning-adaptation-deployment learning-adaptation=$DOCKER_USERNAME/learning_adaptation:latest -n cloudsentinel
-    kubectl set image deployment/learning-adaptation-celery-deployment learning-adaptation-celery=$DOCKER_USERNAME/learning_adaptation:latest -n cloudsentinel
-    kubectl set image deployment/monitoring-project-deployment monitoring-project=$DOCKER_USERNAME/monitoring_project:latest -n cloudsentinel
+    kubectl port-forward svc/monitoring-project-service 30000:80 -n cloudsentinel
     ```
+
+    You can now access the interface on http://localhost:30000
