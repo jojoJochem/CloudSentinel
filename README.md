@@ -139,6 +139,4 @@ This README provides instructions for deploying the CloudSentinel application. T
     kubectl set image deployment/learning-adaptation-deployment learning-adaptation=$DOCKER_USERNAME/learning_adaptation:latest -n cloudsentinel
     kubectl set image deployment/learning-adaptation-celery-deployment learning-adaptation-celery=$DOCKER_USERNAME/learning_adaptation:latest -n cloudsentinel
     kubectl set image deployment/monitoring-project-deployment monitoring-project=$DOCKER_USERNAME/monitoring_project:latest -n cloudsentinel
-
-    kubectl rollout restart deployment -n cloudsentinel
     ```
