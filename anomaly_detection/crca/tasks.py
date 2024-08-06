@@ -7,10 +7,10 @@ import traceback
 from crca import run_crca
 
 # Configure and initialize Celery
-# celery = Celery(__name__, backend='redis://redis:6379/1', broker='redis://redis:6379/1')
+celery = Celery(__name__, backend='redis://redis:6379/1', broker='redis://redis:6379/1')
 
 # testing purposes
-celery = Celery(__name__, backend='redis://localhost:6379/1', broker='redis://localhost:6379/1')
+# celery = Celery(__name__, backend='redis://localhost:6379/1', broker='redis://localhost:6379/1')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

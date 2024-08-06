@@ -18,15 +18,24 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Configure and initialize Celery
-# app.config['broker_url'] = 'redis://redis:6379/0'
-# app.config['result_backend'] = 'redis://redis:6379/0'
+app.config['broker_url'] = 'redis://redis:6379/0'
+app.config['result_backend'] = 'redis://redis:6379/0'
 
 # testing purposes
-app.config['broker_url'] = 'redis://localhost:6379/0'
-app.config['result_backend'] = 'redis://localhost:6379/0'
+# app.config['broker_url'] = 'redis://localhost:6379/0'
+# app.config['result_backend'] = 'redis://localhost:6379/0'
 
 celery = Celery(app.name, broker=app.config['broker_url'])
-celery.conf.update(app.config)
+celery.conf.update(
+    app.config,
+    broker_connection_retry_on_startup=True,
+    worker_cancel_long_running_tasks_on_connection_loss=True,
+    task_acks_late=True,  # If you are using late acknowledgments
+    worker_prefetch_multiplier=1,  # Example configuration to avoid over-fetching
+)
+
+# Command to run the Celery worker:
+# celery -A app.celery worker --loglevel=info
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

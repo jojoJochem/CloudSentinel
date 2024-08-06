@@ -10,10 +10,10 @@ from cgnn.train import train
 from cgnn.evaluate_prediction import predict_and_evaluate
 
 # Configure and initialize Celery
-# celery = Celery(__name__, backend='redis://redis:6379/2', broker='redis://redis:6379/2')
+celery = Celery(__name__, backend='redis://redis:6379/2', broker='redis://redis:6379/2')
 
 # testing purposes
-celery = Celery(__name__, backend='redis://localhost:6379/2', broker='redis://localhost:6379/2')
+# celery = Celery(__name__, backend='redis://localhost:6379/2', broker='redis://localhost:6379/2')
 
 
 class CustomTask(Task):

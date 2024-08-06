@@ -23,15 +23,21 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
 # Configure and initialize Celery
-# app.config['broker_url'] = 'redis://redis:6379/2'
-# app.config['result_backend'] = 'redis://redis:6379/2'
+app.config['broker_url'] = 'redis://redis:6379/2'
+app.config['result_backend'] = 'redis://redis:6379/2'
 
 # testing purposes
-app.config['broker_url'] = 'redis://localhost:6379/2'
-app.config['result_backend'] = 'redis://localhost:6379/2'
+# app.config['broker_url'] = 'redis://localhost:6379/2'
+# app.config['result_backend'] = 'redis://localhost:6379/2'
 
 celery = Celery(app.import_name, backend=app.config['result_backend'], broker=app.config['broker_url'])
-celery.conf.update(app.config)
+celery.conf.update(
+    app.config,
+    broker_connection_retry_on_startup=True,
+    worker_cancel_long_running_tasks_on_connection_loss=True,
+    task_acks_late=True,  # If you are using late acknowledgments
+    worker_prefetch_multiplier=1,  # Example configuration to avoid over-fetching
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
