@@ -144,40 +144,6 @@ def get_status(task_id):
         return jsonify({"error": str(e)}), 500
 
 
-# @app.route('/results/<task_id>', methods=['GET'])
-# def get_results(task_id):
-#     """
-#     Endpoint to retrieve results of a specific CRCA task identified by task_id.
-
-#     Expects:
-#     - task_id: Unique identifier of the task whose results are to be retrieved.
-
-#     Returns:
-#     - JSON response with CRCA results.
-#     - Error response if the task_id does not exist or an exception occurs.
-#     """
-#     try:
-#         logger.info(f"Received request to get results for task_id: {task_id}")
-#         task = run_crca_task.AsyncResult(task_id)
-
-#         logger.info(f"Task state for task_id {task_id}: {task.state}")
-
-#         if task.state == 'SUCCESS':
-#             logger.info(f"Task result for task_id {task_id}: {task.result}")
-#             save_crca(task.result, task_id)
-#             data = task.result
-#             logger.info(f"Results retrieved and saved for task_id: {task_id}")
-#         else:
-#             data = {"error": "Results not available yet or task failed"}
-#             logger.info(f"No results found for task_id: {task_id}")
-
-#         return jsonify(data), 200
-
-#     except Exception as e:
-#         logger.error(f"Error retrieving results for task_id {task_id}: {traceback.format_exc()}")
-#         return jsonify({"error": str(e)}), 500
-
-
 @app.route('/results/<task_id>', methods=['GET'])
 def get_results(task_id):
     """
@@ -192,19 +158,53 @@ def get_results(task_id):
     """
     try:
         logger.info(f"Received request to get results for task_id: {task_id}")
-        path = 'results/'+str(task_id)
-        if os.path.exists(path):
-            with open(path + '/crca_results.json', 'r') as f:
-                data = json.load(f)
-            logger.info(f"Results retrieved for task_id: {task_id}")
+        task = run_crca_task.AsyncResult(task_id)
+
+        logger.info(f"Task state for task_id {task_id}: {task.state}")
+
+        if task.state == 'SUCCESS':
+            logger.info(f"Task result for task_id {task_id}: {task.result}")
+            save_crca(task.result, task_id)
+            data = task.result
+            logger.info(f"Results retrieved and saved for task_id: {task_id}")
         else:
-            data = {"error": "Results not found"}
+            data = {"error": "Results not available yet or task failed"}
             logger.info(f"No results found for task_id: {task_id}")
+
         return jsonify(data), 200
 
     except Exception as e:
         logger.error(f"Error retrieving results for task_id {task_id}: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
+
+
+# @app.route('/results/<task_id>', methods=['GET'])
+# def get_results(task_id):
+#     """
+#     Endpoint to retrieve results of a specific CRCA task identified by task_id.
+
+#     Expects:
+#     - task_id: Unique identifier of the task whose results are to be retrieved.
+
+#     Returns:
+#     - JSON response with CRCA results.
+#     - Error response if the task_id does not exist or an exception occurs.
+#     """
+#     try:
+#         logger.info(f"Received request to get results for task_id: {task_id}")
+#         path = 'results/'+str(task_id)
+#         if os.path.exists(path):
+#             with open(path + '/crca_results.json', 'r') as f:
+#                 data = json.load(f)
+#             logger.info(f"Results retrieved for task_id: {task_id}")
+#         else:
+#             data = {"error": "Results not found"}
+#             logger.info(f"No results found for task_id: {task_id}")
+#         return jsonify(data), 200
+
+#     except Exception as e:
+#         logger.error(f"Error retrieving results for task_id {task_id}: {traceback.format_exc()}")
+#         return jsonify({"error": str(e)}), 500
 
 @app.route('/delete_results/<task_id>', methods=['DELETE'])
 def delete_results(task_id):
