@@ -8,6 +8,7 @@ import uuid
 from celery import Celery
 from kubernetes import client, config
 from flask_cors import CORS
+import redis
 
 from data_collector import collect_crca_data, fetch_metrics
 from config import set_initial_metric_config, get_config, set_config
@@ -32,12 +33,28 @@ celery.conf.update(
     task_acks_late=True,  # If you are using late acknowledgments
     worker_prefetch_multiplier=1,  # Example configuration to avoid over-fetching
 )
+
+# Configure Redis
+redis_client = redis.StrictRedis(host='redis', port=6379, db=0)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Command to run the Celery worker:
 # celery -A app.celery worker --loglevel=info
+
+
+def store_scheduled_task_id(task_id, monitor_task_id):
+    redis_client.sadd(f"scheduled_tasks:{monitor_task_id}", task_id)
+
+
+def get_scheduled_task_ids(monitor_task_id):
+    return redis_client.smembers(f"scheduled_tasks:{monitor_task_id}")
+
+
+def remove_scheduled_task_ids(monitor_task_id):
+    redis_client.delete(f"scheduled_tasks:{monitor_task_id}")
 
 
 @celery.task(bind=True)
@@ -53,7 +70,6 @@ def monitoring_task(self, monitor_info, iteration=0):
     Returns:
         None
     """
-    test_info = monitor_info
     try:
         # Check for task revocation by querying the backend
         task = monitoring_task.AsyncResult(self.request.id)
@@ -62,20 +78,21 @@ def monitoring_task(self, monitor_info, iteration=0):
             return
 
         end_time = int(time.time())
-        start_time = end_time - (test_info['data']['duration'] * 60)
-        dataframe = fetch_metrics(test_info['data']['containers'], test_info['data']['metrics'], start_time, end_time,
-                                    test_info['settings']['PROMETHEUS_URL'], test_info['data']['data_interval'])
+        start_time = end_time - (monitor_info['data']['duration'] * 60)
+        dataframe = fetch_metrics(monitor_info['data']['containers'], monitor_info['data']['metrics'], start_time, end_time,
+                                  monitor_info['settings']['PROMETHEUS_URL'], monitor_info['data']['data_interval'])
         test_files = {'test_array': dataframe.to_csv(header=False, index=False)}
-        test_info['data']['start_time'] = start_time
-        test_info['data']['end_time'] = end_time
-        test_info['data']['iteration'] = iteration
-        test_info_json = json.dumps(test_info)
+        monitor_info['data']['start_time'] = start_time
+        monitor_info['data']['end_time'] = end_time
+        monitor_info['data']['iteration'] = iteration
+        monitor_info_json = json.dumps(monitor_info)
         logger.info(f"Sending data for task {self.request.id}, iteration {iteration}")
-        requests.post(f"{test_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_data",
-                      files=test_files, data={'test_info': test_info_json})
+        requests.post(f"{monitor_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_data",
+                      files=test_files, data={'test_info': monitor_info_json})
 
         # Schedule next iteration
-        monitoring_task.apply_async(args=[monitor_info, iteration + 1], countdown=monitor_info['data']['test_interval'] * 60)
+        next_task = monitoring_task.apply_async(args=[monitor_info, iteration + 1], countdown=monitor_info['data']['test_interval'] * 60)
+        store_scheduled_task_id(next_task.id, self.request.id)
 
     except Exception:
         logger.error(f"Error in monitoring task {self.request.id}: {traceback.format_exc()}")
@@ -93,7 +110,8 @@ def start_monitoring():
         monitor_info_json = request.form.get('monitor_info')
         monitor_info = json.loads(monitor_info_json)
         monitor_info['task_id'] = str(uuid.uuid4())
-        task = monitoring_task.apply_async(args=[monitor_info, ])
+        task = monitoring_task.apply_async(args=[monitor_info])
+
         logger.info(f"Task {task.id} started")
         return jsonify({'status': 'monitoring_started', 'task_id': task.id}), 200
     except Exception as e:
@@ -121,7 +139,7 @@ def get_tasks():
 @app.route('/stop_monitoring/<task_id>', methods=['DELETE'])
 def stop_monitoring(task_id):
     """
-    Stops a running monitoring task.
+    Stops a running monitoring task and its scheduled instances.
 
     Args:
         task_id (str): The ID of the task to be stopped.
@@ -131,8 +149,18 @@ def stop_monitoring(task_id):
     """
     try:
         if task_id:
+            # Revoke active task
             celery.control.revoke(task_id, terminate=True)
-            logger.info(f"Task {task_id} stopped")
+
+            # Revoke scheduled tasks
+            scheduled_task_ids = get_scheduled_task_ids(task_id)
+            for scheduled_task_id in scheduled_task_ids:
+                celery.control.revoke(scheduled_task_id.decode('utf-8'), terminate=True)
+
+            # Remove the task ID from Redis
+            remove_scheduled_task_ids(task_id)
+
+            logger.info(f"Task {task_id} and its scheduled instances stopped")
             return jsonify({'status': f'monitoring_stopped for task_id {task_id}'}), 200
         else:
             logger.warning("Task ID is missing")
