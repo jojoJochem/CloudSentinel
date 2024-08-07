@@ -4,6 +4,7 @@ import requests
 import json
 import traceback
 import time
+import uuid
 from celery import Celery
 from kubernetes import client, config
 from flask_cors import CORS
@@ -53,14 +54,13 @@ def monitoring_task(self, monitor_info, iteration=0):
         None
     """
     test_info = monitor_info
-    test_info['task_id'] = self.request.id
     try:
         # Check for task revocation by querying the backend
         task = monitoring_task.AsyncResult(self.request.id)
         if task.state == 'REVOKED':
             logger.info(f"Task {self.request.id} revoked")
             return
-        
+
         end_time = int(time.time())
         start_time = end_time - (test_info['data']['duration'] * 60)
         dataframe = fetch_metrics(test_info['data']['containers'], test_info['data']['metrics'], start_time, end_time,
@@ -92,7 +92,8 @@ def start_monitoring():
     try:
         monitor_info_json = request.form.get('monitor_info')
         monitor_info = json.loads(monitor_info_json)
-        task = monitoring_task.apply_async(args=[monitor_info])
+        monitor_info['task_id'] = uuid.uuid4()
+        task = monitoring_task.apply_async(args=[monitor_info, ])
         logger.info(f"Task {task.id} started")
         return jsonify({'status': 'monitoring_started', 'task_id': task.id}), 200
     except Exception as e:
