@@ -52,10 +52,6 @@ def monitoring_task(self, monitor_info, iteration=0):
     Returns:
         None
     """
-
-    test_info = monitor_info
-    test_info['task_id'] = self.request.id
-
     try:
         # Check for task revocation by querying the backend
         task = monitoring_task.AsyncResult(self.request.id)
