@@ -92,7 +92,7 @@ def start_monitoring():
     try:
         monitor_info_json = request.form.get('monitor_info')
         monitor_info = json.loads(monitor_info_json)
-        monitor_info['task_id'] = uuid.uuid4()
+        monitor_info['task_id'] = str(uuid.uuid4())
         task = monitoring_task.apply_async(args=[monitor_info, ])
         logger.info(f"Task {task.id} started")
         return jsonify({'status': 'monitoring_started', 'task_id': task.id}), 200
