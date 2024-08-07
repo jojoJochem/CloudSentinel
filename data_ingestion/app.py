@@ -122,17 +122,25 @@ def start_monitoring():
 @app.route('/get_active_tasks', methods=['GET'])
 def get_tasks():
     """
-    Retrieves the list of active tasks.
+    Retrieves the list of scheduled tasks with their IDs.
 
     Returns:
-        Response: JSON response containing the active tasks.
+        Response: JSON response containing the scheduled tasks with their IDs.
     """
     try:
-        active_tasks = celery.control.inspect().scheduled()
-        logger.info("Retrieved active tasks")
-        return jsonify(active_tasks), 200
+        inspector = celery.control.inspect()
+        scheduled_tasks = inspector.scheduled()
+        scheduled_task_ids = []
+
+        if scheduled_tasks:
+            for worker, tasks in scheduled_tasks.items():
+                for task in tasks:
+                    scheduled_task_ids.append(task['request']['id'])
+
+        logger.info("Retrieved scheduled tasks")
+        return jsonify(scheduled_task_ids), 200
     except Exception as e:
-        logger.error(f"Error retrieving active tasks: {traceback.format_exc()}")
+        logger.error(f"Error retrieving scheduled tasks: {traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
@@ -168,6 +176,7 @@ def stop_monitoring(task_id):
     except Exception as e:
         logger.error(f"Error stopping task {task_id}: {traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
 
 
 @app.route('/anomaly_rca', methods=['POST'])
