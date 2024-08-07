@@ -1,14 +1,12 @@
 from flask import Flask, request, jsonify
 import logging
 import requests
-import time
 import json
 import traceback
+import time
 from celery import Celery
 from kubernetes import client, config
 from flask_cors import CORS
-from celery.schedules import schedule
-import uuid
 
 from data_collector import collect_crca_data, fetch_metrics
 from config import set_initial_metric_config, get_config, set_config
@@ -34,33 +32,60 @@ celery.conf.update(
     worker_prefetch_multiplier=1,  # Example configuration to avoid over-fetching
 )
 
-# Command to run the Celery worker:
-# celery -A app.celery worker --loglevel=info
-
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# Command to run the Celery worker:
+# celery -A app.celery worker --loglevel=info
+
+monitoring_tasks = {}
+
 
 @celery.task(bind=True)
-def monitoring_task(self, monitor_info):
+def monitoring_task(self, monitor_info, iteration):
     """
-    Celery task to perform monitoring.
+    Celery task to perform continuous monitoring.
+
+    Args:
+        self (Task): The Celery task instance.
+        monitor_info (dict): Information required for monitoring.
+        iteration (int): The current iteration count.
+
+    Returns:
+        None
     """
+    test_info = monitor_info
+    test_info['task_id'] = self.request.id
+
     try:
         end_time = int(time.time())
-        start_time = end_time - (monitor_info['data']['duration'] * 60)
-        dataframe = fetch_metrics(monitor_info['data']['containers'], monitor_info['data']['metrics'], start_time, end_time,
-                                  monitor_info['settings']['PROMETHEUS_URL'], monitor_info['data']['data_interval'])
+        start_time = end_time - (test_info['data']['duration'] * 60)
+        dataframe = fetch_metrics(test_info['data']['containers'], test_info['data']['metrics'], start_time, end_time,
+                                  test_info['settings']['PROMETHEUS_URL'], test_info['data']['data_interval'])
         test_files = {'test_array': dataframe.to_csv(header=False, index=False)}
-        monitor_info['data']['start_time'] = start_time
-        monitor_info['data']['end_time'] = end_time
-        monitor_info_json = json.dumps(monitor_info)
-        logger.info(f"Sending data for task {self.request.id}")
-        requests.post(f"{monitor_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_data",
-                      files=test_files, data={'test_info': monitor_info_json})
+        test_info['data']['start_time'] = start_time
+        test_info['data']['end_time'] = end_time
+        test_info['data']['iteration'] = iteration
+        test_info_json = json.dumps(test_info)
+        logger.info(f"Sending data for task {self.request.id}, iteration {iteration}")
+        requests.post(f"{test_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_data",
+                      files=test_files, data={'test_info': test_info_json})
+        iteration += 1
+        schedule_monitoring_task.apply_async(args=[monitor_info, iteration], countdown=test_info['data']['test_interval'] * 60)
     except Exception:
         logger.error(f"Error in monitoring task {self.request.id}: {traceback.format_exc()}")
+
+
+def schedule_monitoring_task(monitor_info, iteration):
+    """
+    Schedule a monitoring task to run periodically.
+
+    Args:
+        monitor_info (dict): The monitoring information.
+        iteration (int): The current iteration count.
+    """
+    monitoring_task.apply_async(args=[monitor_info, iteration])
 
 
 @app.route('/start_monitoring', methods=['POST'])
@@ -74,26 +99,10 @@ def start_monitoring():
     try:
         monitor_info_json = request.form.get('monitor_info')
         monitor_info = json.loads(monitor_info_json)
-        test_interval = monitor_info['data']['test_interval']
-
-        # Generate a unique task_id if it doesn't exist
-        if 'task_id' not in monitor_info:
-            monitor_info['task_id'] = str(uuid.uuid4())
-
-        task_id = monitor_info['task_id']
-
-        # Schedule the periodic task
-        celery.conf.beat_schedule = {
-            f'monitoring-task-{task_id}': {
-                'task': 'app.monitoring_task',
-                'schedule': schedule(run_every=test_interval * 60),
-                'args': (monitor_info,)
-            }
-        }
-        celery.conf.timezone = 'UTC'
-
-        logger.info(f"Monitoring task scheduled with interval {test_interval} minutes")
-        return jsonify({'status': 'monitoring_scheduled', 'task_id': task_id}), 200
+        initial_iteration = 0
+        schedule_monitoring_task(monitor_info, initial_iteration)
+        logger.info(f"Monitoring task scheduled with initial iteration {initial_iteration}")
+        return jsonify({'status': 'monitoring_started', 'initial_iteration': initial_iteration}), 200
     except Exception as e:
         logger.error(f"Error starting monitoring task: {traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
@@ -128,15 +137,14 @@ def stop_monitoring(task_id):
         Response: JSON response with the status of the operation.
     """
     try:
-        if task_id:
+        if task_id in monitoring_tasks:
             celery.control.revoke(task_id, terminate=True)
-            # Remove the scheduled task
-            if f'monitoring-task-{task_id}' in celery.conf.beat_schedule:
-                del celery.conf.beat_schedule[f'monitoring-task-{task_id}']
-                logger.info(f"Task {task_id} stopped and schedule removed")
+            del celery.conf.beat_schedule[monitoring_tasks[task_id]]
+            del monitoring_tasks[task_id]
+            logger.info(f"Task {task_id} stopped")
             return jsonify({'status': f'monitoring_stopped for task_id {task_id}'}), 200
         else:
-            logger.warning("Task ID is missing")
+            logger.warning("Task ID is missing or not found")
             return jsonify({'status': 'task_id_missing'}), 400
     except Exception as e:
         logger.error(f"Error stopping task {task_id}: {traceback.format_exc()}")
@@ -174,6 +182,7 @@ def get_pod_names():
         namespace = request.json['namespace']
         v1 = client.CoreV1Api()
         ret = v1.list_namespaced_pod(namespace, watch=False)
+        # ret = v1.list_pod_for_all_namespaces(watch=False)
         pod_names = [item.metadata.name for item in ret.items]
         logger.info(f"Retrieved pod names for namespace {namespace}")
         return jsonify(pod_names), 200
