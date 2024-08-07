@@ -52,25 +52,27 @@ def monitoring_task(self, monitor_info, iteration=0):
     Returns:
         None
     """
+    test_info = monitor_info
+    test_info['task_id'] = self.request.id
     try:
         # Check for task revocation by querying the backend
         task = monitoring_task.AsyncResult(self.request.id)
         if task.state == 'REVOKED':
             logger.info(f"Task {self.request.id} revoked")
             return
-
+        
         end_time = int(time.time())
-        start_time = end_time - (monitor_info['data']['duration'] * 60)
-        dataframe = fetch_metrics(monitor_info['data']['containers'], monitor_info['data']['metrics'], start_time, end_time,
-                                  monitor_info['settings']['PROMETHEUS_URL'], monitor_info['data']['data_interval'])
+        start_time = end_time - (test_info['data']['duration'] * 60)
+        dataframe = fetch_metrics(test_info['data']['containers'], test_info['data']['metrics'], start_time, end_time,
+                                    test_info['settings']['PROMETHEUS_URL'], test_info['data']['data_interval'])
         test_files = {'test_array': dataframe.to_csv(header=False, index=False)}
-        monitor_info['data']['start_time'] = start_time
-        monitor_info['data']['end_time'] = end_time
-        monitor_info['data']['iteration'] = iteration
-        monitor_info_json = json.dumps(monitor_info)
+        test_info['data']['start_time'] = start_time
+        test_info['data']['end_time'] = end_time
+        test_info['data']['iteration'] = iteration
+        test_info_json = json.dumps(test_info)
         logger.info(f"Sending data for task {self.request.id}, iteration {iteration}")
-        requests.post(f"{monitor_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_data",
-                      files=test_files, data={'test_info': monitor_info_json})
+        requests.post(f"{test_info['settings']['API_DATA_PROCESSING_URL']}/preprocess_cgnn_data",
+                      files=test_files, data={'test_info': test_info_json})
 
         # Schedule next iteration
         monitoring_task.apply_async(args=[monitor_info, iteration + 1], countdown=monitor_info['data']['test_interval'] * 60)
