@@ -51,13 +51,17 @@ def normalize_data(file):
     Returns:
         str: A CSV formatted string of the normalized data.
     """
-    file_extension = file.filename.rsplit('.', 1)[1].lower()
-    if file_extension not in ['csv', 'pkl', 'txt']:
+    try:
+        file_extension = file.filename.rsplit('.', 1)[1].lower()
+    except (AttributeError, IndexError):
+        file_extension = None
+
+    if file_extension not in ['csv', 'pkl', 'txt', None]:
         raise ValueError("Unsupported file type. Only CSV, PKL, and TXT files are supported.")
 
     encoding = detect_encoding(file)
 
-    if file_extension == 'csv' or file_extension == 'txt':
+    if file_extension in ['csv', 'txt', None]:
         # Try to read the first row to check for a header
         first_row = pd.read_csv(file, nrows=1, encoding=encoding)
         file.seek(0)  # Reset file pointer to the beginning

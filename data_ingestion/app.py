@@ -110,12 +110,13 @@ def get_tasks():
         Response: JSON response containing the active tasks.
     """
     try:
-        active_tasks = celery.control.inspect().active()
-        logger.info("Retrieved active tasks")
+        inspector = celery.control.inspect()
+        active_tasks = inspector.active()
         return jsonify(active_tasks), 200
     except Exception as e:
         logger.error(f"Error retrieving active tasks: {traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
 
 
 @app.route('/stop_monitoring/<task_id>', methods=['DELETE'])

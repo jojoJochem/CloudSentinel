@@ -26,8 +26,8 @@ jobs:
       run: |
         docker build -t ${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest -f data_ingestion/Dockerfile data_ingestion/
         docker push ${{ secrets.DOCKER_USERNAME }}/data_ingestion:latest
-        # docker build -t ${{ secrets.DOCKER_USERNAME }}/data_processing:latest -f data_processing/Dockerfile data_processing/
-        # docker push ${{ secrets.DOCKER_USERNAME }}/data_processing:latest
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/data_processing:latest -f data_processing/Dockerfile data_processing/
+        docker push ${{ secrets.DOCKER_USERNAME }}/data_processing:latest
         # docker build -t ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_cgnn:latest -f anomaly_detection/cgnn/Dockerfile anomaly_detection/cgnn/
         # docker push ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_cgnn:latest
         # docker build -t ${{ secrets.DOCKER_USERNAME }}/anomaly_detection_crca:latest -f anomaly_detection/crca/Dockerfile anomaly_detection/crca/
